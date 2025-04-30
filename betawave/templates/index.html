@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player - {{ username }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <span>Bienvenido, {{ username }}</span>
+            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Music Player</h1>
+        <button id="toggle-songs-btn">Mostrar Mis Canciones</button>
+        <div id="song-list" style="display: none;">
+            <h2>Mis Canciones</h2>
+            <ul id="songs"></ul>
+        </div>
+        
+        <button id="toggle-favorites-btn">Mostrar Favoritos</button>
+        <div id="favorites-list" style="display: none;">
+            <h2>Mis Favoritos</h2>
+            <ul id="favorites"></ul>
+        </div>
+        
+        <div id="player">
+            <audio id="audio-player" controls></audio>
+        </div>
+        
+        <div id="add-song">
+            <h2>Añadir Canción</h2>
+            <input type="text" id="song-name" placeholder="Nombre de la canción">
+            <input type="text" id="song-url" placeholder="URL de YouTube">
+            <button id="add-song-btn">Añadir Canción</button>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const audioPlayer = document.getElementById('audio-player');
+            const toggleSongsBtn = document.getElementById('toggle-songs-btn');
+            const songList = document.getElementById('song-list');
+            const toggleFavoritesBtn = document.getElementById('toggle-favorites-btn');
+            const favoritesList = document.getElementById('favorites-list');
+            
+            // Mostrar/ocultar canciones
+            toggleSongsBtn.addEventListener('click', function() {
+                if (songList.style.display === 'none') {
+                    fetch('/api/songs')
+                        .then(response => response.json())
+                        .then(songs => {
+                            const songListUl = document.getElementById('songs');
+                            songListUl.innerHTML = '';
+                            
+                            if (songs.length > 0) {
+                                songs.forEach(song => {
+                                    const li = document.createElement('li');
+                                    li.textContent = song.name;
+                                    li.dataset.songId = song.id;
+                                    
+                                    const favoriteBtn = document.createElement('button');
+                                    favoriteBtn.innerHTML = '☆';
+                                    favoriteBtn.classList.add('favorite-btn');
+                                    
+                                    fetch('/api/is_favorite', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ song_id: song.id })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.is_favorite) {
+                                            favoriteBtn.innerHTML = '★';
+                                            favoriteBtn.classList.add('active');
+                                        }
+                                    });
+                                    
+                                    favoriteBtn.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        toggleFavorite(song.id, favoriteBtn);
+                                    });
+                                    
+                                    const downloadBtn = document.createElement('button');
+                                    downloadBtn.textContent = 'Descargar';
+                                    downloadBtn.classList.add('download-btn');
+                                    downloadBtn.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        showFormatMenu(song.id, e);
+                                    });
+                                    
+                                    const deleteBtn = document.createElement('button');
+                                    deleteBtn.textContent = 'Borrar';
+                                    deleteBtn.classList.add('delete-btn');
+                                    deleteBtn.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        deleteSong(song.id);
+                                    });
+                                    
+                                    const buttonsContainer = document.createElement('div');
+                                    buttonsContainer.classList.add('buttons-container');
+                                    buttonsContainer.appendChild(favoriteBtn);
+                                    buttonsContainer.appendChild(downloadBtn);
+                                    buttonsContainer.appendChild(deleteBtn);
+                                    
+                                    const container = document.createElement('div');
+                                    container.classList.add('song-container');
+                                    container.addEventListener('click', () => playSong(song.id));
+                                    container.appendChild(li);
+                                    container.appendChild(buttonsContainer);
+                                    
+                                    songListUl.appendChild(container);
+                                });
+                            } else {
+                                const li = document.createElement('li');
+                                li.textContent = 'No tienes canciones aún. Añade alguna!';
+                                songListUl.appendChild(li);
+                            }
+                            songList.style.display = 'block';
+                            toggleSongsBtn.textContent = 'Ocultar Canciones';
+                        });
+                } else {
+                    songList.style.display = 'none';
+                    toggleSongsBtn.textContent = 'Mostrar Mis Canciones';
+                }
+            });
+            
+            // Mostrar/ocultar favoritos
+            toggleFavoritesBtn.addEventListener('click', function() {
+                if (favoritesList.style.display === 'none') {
+                    fetch('/api/favorites')
+                        .then(response => response.json())
+                        .then(favorites => {
+                            const favoritesUl = document.getElementById('favorites');
+                            favoritesUl.innerHTML = '';
+                            
+                            if (favorites.length > 0) {
+                                favorites.forEach(song => {
+                                    const li = document.createElement('li');
+                                    li.textContent = song.name;
+                                    li.dataset.songId = song.id;
+                                    li.addEventListener('click', () => playSong(song.id));
+                                    favoritesUl.appendChild(li);
+                                });
+                            } else {
+                                const li = document.createElement('li');
+                                li.textContent = 'No tienes canciones favoritas aún.';
+                                favoritesUl.appendChild(li);
+                            }
+                            favoritesList.style.display = 'block';
+                            toggleFavoritesBtn.textContent = 'Ocultar Favoritos';
+                        });
+                } else {
+                    favoritesList.style.display = 'none';
+                    toggleFavoritesBtn.textContent = 'Mostrar Favoritos';
+                }
+            });
+            
+            // Añadir canción
+            document.getElementById('add-song-btn').addEventListener('click', function() {
+                const songName = document.getElementById('song-name').value;
+                const songUrl = document.getElementById('song-url').value;
+                
+                if (!songName || !songUrl) {
+                    alert('Por favor ingresa nombre y URL de la canción');
+                    return;
+                }
+                
+                fetch('/api/add_song', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        song_name: songName,
+                        song_url: songUrl
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Canción añadida correctamente!');
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'No se pudo añadir la canción'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al conectar con el servidor');
+                });
+            });
+            
+            // Funciones auxiliares
+            function playSong(songId) {
+                fetch('/api/play', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ song_id: songId })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.audio_stream_url) {
+                        audioPlayer.src = data.audio_stream_url;
+                        audioPlayer.play()
+                            .then(() => console.log(`Reproduciendo canción ID: ${songId}`))
+                            .catch(e => {
+                                console.error("Error al reproducir:", e);
+                                if (data.fallback_url) {
+                                    window.open(data.fallback_url, '_blank');
+                                }
+                            });
+                    } else if (data.fallback_url) {
+                        window.open(data.fallback_url, '_blank');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (error.status === 401) {
+                        window.location.href = '/login';
+                    } else {
+                        alert('Error: ' + (error.message || 'No se pudo reproducir la canción'));
+                        if (error.fallback_url) {
+                            window.open(error.fallback_url, '_blank');
+                        }
+                    }
+                });
+            }
+            
+            function toggleFavorite(songId, button) {
+                fetch('/api/toggle_favorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ song_id: songId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.is_favorite !== undefined) {
+                        button.innerHTML = data.is_favorite ? '★' : '☆';
+                        button.classList.toggle('active', data.is_favorite);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (error.status === 401) {
+                        window.location.href = '/login';
+                    }
+                });
+            }
+            
+            function showFormatMenu(songId, event) {
+                event.stopPropagation();
+                
+                const menu = document.createElement('div');
+                menu.className = 'format-menu';
+                menu.innerHTML = `
+                    <div class="format-option" data-format="mp3">MP3</div>
+                    <div class="format-option" data-format="wav">WAV</div>
+                    <div class="format-option" data-format="ogg">OGG</div>
+                `;
+                
+                const rect = event.target.getBoundingClientRect();
+                menu.style.position = 'absolute';
+                menu.style.left = `${rect.left}px`;
+                menu.style.top = `${rect.bottom}px`;
+                
+                menu.querySelectorAll('.format-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        downloadSong(songId, option.dataset.format);
+                        document.body.removeChild(menu);
+                    });
+                });
+                
+                document.addEventListener('click', function closeMenu() {
+                    if (document.body.contains(menu)) {
+                        document.body.removeChild(menu);
+                    }
+                    document.removeEventListener('click', closeMenu);
+                });
+                
+                document.body.appendChild(menu);
+            }
+            
+            function downloadSong(songId, format) {
+                fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        song_id: songId,
+                        format: format
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la descarga');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `cancion.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al descargar la canción');
+                });
+            }
+            
+            function deleteSong(songId) {
+                if (confirm('¿Estás seguro de borrar esta canción?')) {
+                    fetch('/api/delete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ song_id: songId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Error al borrar la canción');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (error.status === 401) {
+                            window.location.href = '/login';
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

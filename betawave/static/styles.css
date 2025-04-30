@@ -1,0 +1,232 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+    color: #333;
+}
+
+header {
+    background-color: #2a5298;
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+nav a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+h1 {
+    text-align: center;
+    color: #2a5298;
+}
+
+button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #2a5298;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #1e3c72;
+}
+
+#song-list, #favorites-list {
+    margin: 20px auto;
+    max-width: 800px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#song-list h2, #favorites-list h2 {
+    margin-top: 0;
+    color: #2a5298;
+}
+
+#songs, #favorites {
+    list-style-type: none;
+    padding: 0;
+}
+
+#songs li, #favorites li {
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#songs li:hover, #favorites li:hover {
+    background-color: #ddd;
+}
+
+#player {
+    margin: 20px auto;
+    max-width: 800px;
+    text-align: center;
+}
+
+#audio-player {
+    width: 100%;
+    margin-top: 10px;
+}
+
+#add-song {
+    margin: 20px auto;
+    max-width: 800px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#add-song h2 {
+    margin-top: 0;
+    color: #2a5298;
+}
+
+#add-song input {
+    display: block;
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#add-song button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#add-song button:hover {
+    background-color: #218838;
+}
+
+.song-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.buttons-container {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.download-btn, .delete-btn, .favorite-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.download-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.download-btn:hover {
+    background-color: #218838;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+.favorite-btn {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.favorite-btn:hover {
+    background-color: #e0a800;
+}
+
+.favorite-btn.active {
+    background-color: #ffc107;
+    color: #fff;
+}
+
+.format-menu {
+    position: absolute;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    padding: 5px 0;
+    z-index: 1000;
+}
+
+.format-option {
+    padding: 8px 15px;
+    cursor: pointer;
+    color: #333;
+}
+
+.format-option:hover {
+    background-color: #f0f0f0;
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 0 1rem;
+    }
+    
+    .song-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .buttons-container {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
