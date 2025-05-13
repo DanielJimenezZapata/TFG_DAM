@@ -9,8 +9,16 @@
 <body>
     <header>
         <nav>
-            <span>Bienvenido, {{ username }}</span>
-            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+            <div class="dropdown">
+                <button class="dropbtn" id="menu-btn">☰ Menú</button>
+                <div class="dropdown-content" id="dropdown-menu">
+                    <a href="{{ url_for('index') }}">Inicio</a>
+                    <a href="#">Perfil</a>
+                    <a href="#">Configuración</a>
+                    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                </div>
+            </div>
+            <span class="welcome-message">Bienvenido, {{ username }}</span>
         </nav>
     </header>
 
@@ -356,6 +364,55 @@
                     });
                 }
             }
+        });
+
+
+        // Manejar el menú desplegable en móviles
+        document.querySelector('.dropbtn').addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) { // Solo para móviles
+                e.preventDefault();
+                const dropdown = document.querySelector('.dropdown-content');
+                if (dropdown.style.display === 'block') {
+                    dropdown.style.display = 'none';
+                } else {
+                    dropdown.style.display = 'block';
+                }
+            }
+        });
+
+        // Cerrar el menú si se hace clic fuera de él
+        window.addEventListener('click', function(e) {
+            if (!e.target.matches('.dropbtn')) {
+                const dropdowns = document.querySelectorAll('.dropdown-content');
+                dropdowns.forEach(dropdown => {
+                    if (dropdown.style.display === 'block') {
+                        dropdown.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        // Control del menú desplegable al hacer clic
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById('menu-btn');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            
+            menuBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Evita que el clic se propague
+                dropdownMenu.classList.toggle('show');
+            });
+            
+            // Cerrar el menú si se hace clic fuera de él
+            window.addEventListener('click', function() {
+                if (dropdownMenu.classList.contains('show')) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
+            
+            // Evitar que el menú se cierre al hacer clic dentro de él
+            dropdownMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
         });
     </script>
 </body>

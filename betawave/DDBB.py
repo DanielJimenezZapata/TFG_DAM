@@ -5,14 +5,12 @@ def init_db():
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
     
-    # Tabla de usuarios (actualizada)
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT UNIQUE NOT NULL,
                   password TEXT NOT NULL,
-                  email TEXT)''')  # Eliminado UNIQUE de email para flexibilidad
+                  email TEXT)''')
     
-    # Tabla de canciones (actualizada)
     c.execute('''CREATE TABLE IF NOT EXISTS songs
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   name TEXT NOT NULL,
@@ -20,7 +18,6 @@ def init_db():
                   user_id INTEGER NOT NULL,
                   FOREIGN KEY(user_id) REFERENCES users(id))''')
     
-    # Tabla de favoritos (actualizada)
     c.execute('''CREATE TABLE IF NOT EXISTS favorites
                  (user_id INTEGER NOT NULL,
                   song_id INTEGER NOT NULL,

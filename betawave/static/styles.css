@@ -1,223 +1,282 @@
+/* Estilos generales */
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5f7fa;
+    background-color: #f5f5f5;
     color: #333;
+    line-height: 1.6;
 }
 
 header {
-    background-color: #2a5298;
+    background-color: #2c3e50;
     color: white;
-    padding: 1rem 2rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 nav {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    padding: 0 20px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-nav a {
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
-
-nav a:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
 main {
     max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 2rem;
+    margin: 20px auto;
+    padding: 0 20px;
 }
 
+/* Estilos para el menú desplegable */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropbtn:hover {
+    background-color: #2980b9;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    z-index: 1000;
+    border-radius: 4px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
+}
+
+.dropdown-content.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-content a {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.dropdown-content a:last-child {
+    border-bottom: none;
+}
+
+.dropdown-content a:hover {
+    background-color: #f8f9fa;
+    color: #3498db;
+}
+
+.welcome-message {
+    margin-left: 20px;
+    font-size: 1.1em;
+    color: #ecf0f1;
+}
+
+/* Estilos para el contenido principal */
 h1 {
+    color: #2c3e50;
     text-align: center;
-    color: #2a5298;
+    margin-bottom: 30px;
 }
 
 button {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    background-color: #2a5298;
+    background-color: #3498db;
     color: white;
     border: none;
-    border-radius: 5px;
+    padding: 10px 15px;
+    border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.3s;
     font-size: 16px;
+    margin: 5px;
 }
 
 button:hover {
-    background-color: #1e3c72;
+    background-color: #2980b9;
 }
 
 #song-list, #favorites-list {
-    margin: 20px auto;
-    max-width: 800px;
     background-color: white;
+    border-radius: 8px;
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-#song-list h2, #favorites-list h2 {
-    margin-top: 0;
-    color: #2a5298;
+    margin: 20px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 #songs, #favorites {
-    list-style-type: none;
+    list-style: none;
     padding: 0;
-}
-
-#songs li, #favorites li {
-    padding: 10px;
-    margin: 5px 0;
-    background-color: #f4f4f4;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#songs li:hover, #favorites li:hover {
-    background-color: #ddd;
-}
-
-#player {
-    margin: 20px auto;
-    max-width: 800px;
-    text-align: center;
-}
-
-#audio-player {
-    width: 100%;
-    margin-top: 10px;
-}
-
-#add-song {
-    margin: 20px auto;
-    max-width: 800px;
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-#add-song h2 {
-    margin-top: 0;
-    color: #2a5298;
-}
-
-#add-song input {
-    display: block;
-    width: calc(100% - 22px);
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-#add-song button {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-#add-song button:hover {
-    background-color: #218838;
 }
 
 .song-container {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.song-container:hover {
+    background-color: #f8f9fa;
 }
 
 .buttons-container {
     display: flex;
-    gap: 5px;
-    align-items: center;
+    gap: 8px;
 }
 
-.download-btn, .delete-btn, .favorite-btn {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.favorite-btn, .download-btn, .delete-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
     font-size: 14px;
+    transition: all 0.2s;
+}
+
+.favorite-btn {
+    background-color: #f1c40f;
+    color: #34495e;
+}
+
+.favorite-btn.active {
+    background-color: #f39c12;
+    color: white;
+}
+
+.favorite-btn:hover {
+    background-color: #f39c12;
+    color: white;
 }
 
 .download-btn {
-    background-color: #28a745;
+    background-color: #2ecc71;
     color: white;
 }
 
 .download-btn:hover {
-    background-color: #218838;
+    background-color: #27ae60;
 }
 
 .delete-btn {
-    background-color: #dc3545;
+    background-color: #e74c3c;
     color: white;
 }
 
 .delete-btn:hover {
-    background-color: #c82333;
+    background-color: #c0392b;
 }
 
-.favorite-btn {
-    background-color: #ffc107;
-    color: #333;
+/* Estilos para el reproductor */
+#player {
+    margin: 30px 0;
+    display: flex;
+    justify-content: center;
 }
 
-.favorite-btn:hover {
-    background-color: #e0a800;
+#audio-player {
+    width: 100%;
+    max-width: 600px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.favorite-btn.active {
-    background-color: #ffc107;
-    color: #fff;
+/* Estilos para añadir canciones */
+#add-song {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
+#add-song h2 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+#add-song input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    max-width: 500px;
+}
+
+#add-song button {
+    background-color: #2ecc71;
+}
+
+#add-song button:hover {
+    background-color: #27ae60;
+}
+
+/* Menú de formatos para descarga */
 .format-menu {
     position: absolute;
     background-color: white;
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    padding: 5px 0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
+    border: 1px solid #eee;
 }
 
 .format-option {
-    padding: 8px 15px;
+    padding: 10px 15px;
     cursor: pointer;
-    color: #333;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.format-option:last-child {
+    border-bottom: none;
 }
 
 .format-option:hover {
-    background-color: #f0f0f0;
+    background-color: #f8f9fa;
+    color: #3498db;
 }
 
+/* Responsive design */
 @media (max-width: 768px) {
-    main {
-        padding: 0 1rem;
+    nav {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .welcome-message {
+        margin: 10px 0 0 0;
+    }
+    
+    .buttons-container {
+        flex-direction: column;
+        gap: 5px;
     }
     
     .song-container {
@@ -225,8 +284,7 @@ button:hover {
         align-items: flex-start;
     }
     
-    .buttons-container {
+    #audio-player {
         width: 100%;
-        justify-content: flex-end;
     }
 }
