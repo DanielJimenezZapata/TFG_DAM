@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const nowPlayingCover = document.getElementById('now-playing-cover');
     const favoriteBtn = document.getElementById('favorite-btn');
     const addSongBtn = document.getElementById('add-song-btn');
+    const searchInput = document.querySelector('.search-bar input');
+    const navMenuItems = document.querySelectorAll('.nav-menu li');
+    const playlistItems = document.querySelectorAll('.playlists li');
+    const allSongsSection = document.getElementById('all-songs-section');
+    const favoritesSection = document.getElementById('favorites-section');
     
     let currentSongId = null;
     
@@ -18,8 +23,84 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners
     addSongBtn.addEventListener('click', addSong);
     favoriteBtn.addEventListener('click', toggleCurrentFavorite);
+    searchInput.addEventListener('input', handleSearch);
+    
+    // Navigation event listeners
+    navMenuItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Remove active class from all items
+            navMenuItems.forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            const sectionName = this.querySelector('span').textContent;
+            loadSection(sectionName);
+        });
+    });
+    
+    playlistItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Remove active class from all items
+            playlistItems.forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            const sectionName = this.querySelector('span').textContent;
+            loadSection(sectionName);
+        });
+    });
+    
+    // Set "Mis Canciones" as active by default
+    document.querySelector('.playlists li:first-child').classList.add('active');
     
     // Functions
+    function loadSection(sectionName) {
+        // Hide all sections
+        allSongsSection.style.display = 'none';
+        favoritesSection.style.display = 'none';
+        
+        switch(sectionName) {
+            case 'Inicio':
+            case 'Mis Canciones':
+                allSongsSection.style.display = 'block';
+                loadSongs();
+                break;
+            case 'Buscar':
+                allSongsSection.style.display = 'block';
+                searchInput.focus();
+                break;
+            case 'Favoritos':
+            case 'Favoritas':
+                favoritesSection.style.display = 'block';
+                loadFavorites();
+                break;
+            case 'Crear Playlist':
+                alert('Funcionalidad de crear playlist en desarrollo');
+                break;
+        }
+    }
+    
+    function handleSearch(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        // Determine which section is active
+        const activeSection = favoritesSection.style.display === 'block' ? 
+            favoritesList : songList;
+        
+        const songCards = activeSection.querySelectorAll('.song-card');
+        
+        songCards.forEach(card => {
+            const title = card.querySelector('.song-title').textContent.toLowerCase();
+            const artist = card.querySelector('.song-artist').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || artist.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
     function loadSongs() {
         fetch('/api/songs')
             .then(response => response.json())

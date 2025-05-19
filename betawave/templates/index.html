@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Player - {{ username }}</title>
+    <title>BETAWAVE - {{ username }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
@@ -13,7 +13,7 @@
         <div class="sidebar">
             <div class="logo">
                 <i class="fas fa-music"></i>
-                <span>MusicPlayer</span>
+                <span>BETAWAVE</span>
             </div>
             <ul class="nav-menu">
                 <li class="active"><i class="fas fa-home"></i> <span>Inicio</span></li>
@@ -24,7 +24,7 @@
             <div class="playlists">
                 <h3>TUS PLAYLISTS</h3>
                 <ul>
-                    <li><i class="fas fa-list-music"></i> <span>Mis Canciones</span></li>
+                    <li class="active"><i class="fas fa-list-music"></i> <span>Mis Canciones</span></li>
                     <li><i class="fas fa-star"></i> <span>Favoritas</span></li>
                 </ul>
             </div>
@@ -57,22 +57,20 @@
             <div class="content">
                 <h1>Bienvenido, <span class="username">{{ username }}</span></h1>
                 
-                <!-- My Songs -->
-                <div class="section">
+                <!-- All Songs Section -->
+                <div class="section" id="all-songs-section">
                     <h2>Mis Canciones</h2>
                     <div class="song-grid" id="song-list">
-                        <!-- Songs will be loaded here -->
                         <div class="loading-message">
                             <i class="fas fa-spinner fa-spin"></i> Cargando canciones...
                         </div>
                     </div>
                 </div>
 
-                <!-- Favorites -->
-                <div class="section">
+                <!-- Favorites Section -->
+                <div class="section" id="favorites-section" style="display: none;">
                     <h2>Mis Favoritos</h2>
                     <div class="song-grid" id="favorites-list">
-                        <!-- Favorites will be loaded here -->
                         <div class="loading-message">
                             <i class="fas fa-spinner fa-spin"></i> Cargando favoritos...
                         </div>

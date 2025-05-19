@@ -84,6 +84,15 @@ def get_songs(user_id):
     conn.close()
     return songs
 
+def search_songs(user_id, search_term):
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+    c.execute("SELECT id, name, url FROM songs WHERE user_id=? AND LOWER(name) LIKE ?", 
+             (user_id, f'%{search_term.lower()}%'))
+    songs = [{'id': row[0], 'name': row[1], 'url': row[2]} for row in c.fetchall()]
+    conn.close()
+    return songs
+
 def get_song_url(song_id, user_id):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
@@ -197,6 +206,18 @@ def logout():
 def get_songs_route():
     try:
         songs = get_songs(session['user_id'])
+        return jsonify(songs)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/search', methods=['POST'])
+@login_required
+def search_songs_route():
+    try:
+        data = request.json
+        search_term = data.get('search_term', '')
+        user_id = session['user_id']
+        songs = search_songs(user_id, search_term)
         return jsonify(songs)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
