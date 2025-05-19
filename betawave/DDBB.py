@@ -68,8 +68,8 @@ def add_song(name, url, user_id):
 def get_songs(user_id):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    c.execute("SELECT id, name FROM songs WHERE user_id=?", (user_id,))
-    songs = [{'id': row[0], 'name': row[1]} for row in c.fetchall()]
+    c.execute("SELECT id, name, url FROM songs WHERE user_id=?", (user_id,))
+    songs = [{'id': row[0], 'name': row[1], 'url': row[2]} for row in c.fetchall()]
     conn.close()
     return songs
 
@@ -115,10 +115,10 @@ def remove_favorite(user_id, song_id):
 def get_favorites(user_id):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    c.execute('''SELECT s.id, s.name 
+    c.execute('''SELECT s.id, s.name, s.url 
                  FROM songs s JOIN favorites f ON s.id = f.song_id 
                  WHERE f.user_id=?''', (user_id,))
-    favorites = [{'id': row[0], 'name': row[1]} for row in c.fetchall()]
+    favorites = [{'id': row[0], 'name': row[1], 'url': row[2]} for row in c.fetchall()]
     conn.close()
     return favorites
 

@@ -4,416 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Music Player - {{ username }}</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="dropdown">
-                <button class="dropbtn" id="menu-btn">☰ Menú</button>
-                <div class="dropdown-content" id="dropdown-menu">
-                    <a href="{{ url_for('index') }}">Inicio</a>
-                    <a href="#">Perfil</a>
-                    <a href="#">Configuración</a>
-                    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-music"></i>
+                <span>MusicPlayer</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="active"><i class="fas fa-home"></i> <span>Inicio</span></li>
+                <li><i class="fas fa-search"></i> <span>Buscar</span></li>
+                <li><i class="fas fa-heart"></i> <span>Favoritos</span></li>
+                <li><i class="fas fa-plus-circle"></i> <span>Crear Playlist</span></li>
+            </ul>
+            <div class="playlists">
+                <h3>TUS PLAYLISTS</h3>
+                <ul>
+                    <li><i class="fas fa-list-music"></i> <span>Mis Canciones</span></li>
+                    <li><i class="fas fa-star"></i> <span>Favoritas</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar canciones, artistas...">
+                </div>
+                <div class="user-menu">
+                    <div class="dropdown">
+                        <button class="user-btn">
+                            <span class="username">{{ username }}</span>
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="#"><i class="fas fa-user"></i> Perfil</a>
+                            <a href="#"><i class="fas fa-cog"></i> Configuración</a>
+                            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <h1>Bienvenido, <span class="username">{{ username }}</span></h1>
+                
+                <!-- My Songs -->
+                <div class="section">
+                    <h2>Mis Canciones</h2>
+                    <div class="song-grid" id="song-list">
+                        <!-- Songs will be loaded here -->
+                        <div class="loading-message">
+                            <i class="fas fa-spinner fa-spin"></i> Cargando canciones...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Favorites -->
+                <div class="section">
+                    <h2>Mis Favoritos</h2>
+                    <div class="song-grid" id="favorites-list">
+                        <!-- Favorites will be loaded here -->
+                        <div class="loading-message">
+                            <i class="fas fa-spinner fa-spin"></i> Cargando favoritos...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player -->
+                <div class="player-container">
+                    <div class="player-info">
+                        <img id="now-playing-cover" src="https://via.placeholder.com/60" alt="Album Cover">
+                        <div class="song-info">
+                            <div id="now-playing-title">No hay canción seleccionada</div>
+                            <div id="now-playing-artist">{{ username }}</div>
+                        </div>
+                        <button id="favorite-btn"><i class="far fa-heart"></i></button>
+                    </div>
+                    <div class="player-controls">
+                        <audio id="audio-player" controls></audio>
+                    </div>
+                </div>
+
+                <!-- Add Song -->
+                <div class="add-song-form">
+                    <h2>Añadir Nueva Canción</h2>
+                    <div class="form-group">
+                        <input type="text" id="song-name" placeholder="Nombre de la canción" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="url" id="song-url" placeholder="URL de YouTube (ej: https://youtu.be/...)" required>
+                    </div>
+                    <button id="add-song-btn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Añadir Canción
+                    </button>
                 </div>
             </div>
-            <span class="welcome-message">Bienvenido, {{ username }}</span>
-        </nav>
-    </header>
-
-    <main>
-        <h1>Music Player</h1>
-        <button id="toggle-songs-btn">Mostrar Mis Canciones</button>
-        <div id="song-list" style="display: none;">
-            <h2>Mis Canciones</h2>
-            <ul id="songs"></ul>
         </div>
-        
-        <button id="toggle-favorites-btn">Mostrar Favoritos</button>
-        <div id="favorites-list" style="display: none;">
-            <h2>Mis Favoritos</h2>
-            <ul id="favorites"></ul>
-        </div>
-        
-        <div id="player">
-            <audio id="audio-player" controls></audio>
-        </div>
-        
-        <div id="add-song">
-            <h2>Añadir Canción</h2>
-            <input type="text" id="song-name" placeholder="Nombre de la canción">
-            <input type="text" id="song-url" placeholder="URL de YouTube">
-            <button id="add-song-btn">Añadir Canción</button>
-        </div>
-    </main>
+    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elementos del DOM
-            const audioPlayer = document.getElementById('audio-player');
-            const toggleSongsBtn = document.getElementById('toggle-songs-btn');
-            const songList = document.getElementById('song-list');
-            const toggleFavoritesBtn = document.getElementById('toggle-favorites-btn');
-            const favoritesList = document.getElementById('favorites-list');
-            
-            // Mostrar/ocultar canciones
-            toggleSongsBtn.addEventListener('click', function() {
-                if (songList.style.display === 'none') {
-                    fetch('/api/songs')
-                        .then(response => response.json())
-                        .then(songs => {
-                            const songListUl = document.getElementById('songs');
-                            songListUl.innerHTML = '';
-                            
-                            if (songs.length > 0) {
-                                songs.forEach(song => {
-                                    const li = document.createElement('li');
-                                    li.textContent = song.name;
-                                    li.dataset.songId = song.id;
-                                    
-                                    const favoriteBtn = document.createElement('button');
-                                    favoriteBtn.innerHTML = '☆';
-                                    favoriteBtn.classList.add('favorite-btn');
-                                    
-                                    fetch('/api/is_favorite', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({ song_id: song.id })
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.is_favorite) {
-                                            favoriteBtn.innerHTML = '★';
-                                            favoriteBtn.classList.add('active');
-                                        }
-                                    });
-                                    
-                                    favoriteBtn.addEventListener('click', (e) => {
-                                        e.stopPropagation();
-                                        toggleFavorite(song.id, favoriteBtn);
-                                    });
-                                    
-                                    const downloadBtn = document.createElement('button');
-                                    downloadBtn.textContent = 'Descargar';
-                                    downloadBtn.classList.add('download-btn');
-                                    downloadBtn.addEventListener('click', (e) => {
-                                        e.stopPropagation();
-                                        showFormatMenu(song.id, e);
-                                    });
-                                    
-                                    const deleteBtn = document.createElement('button');
-                                    deleteBtn.textContent = 'Borrar';
-                                    deleteBtn.classList.add('delete-btn');
-                                    deleteBtn.addEventListener('click', (e) => {
-                                        e.stopPropagation();
-                                        deleteSong(song.id);
-                                    });
-                                    
-                                    const buttonsContainer = document.createElement('div');
-                                    buttonsContainer.classList.add('buttons-container');
-                                    buttonsContainer.appendChild(favoriteBtn);
-                                    buttonsContainer.appendChild(downloadBtn);
-                                    buttonsContainer.appendChild(deleteBtn);
-                                    
-                                    const container = document.createElement('div');
-                                    container.classList.add('song-container');
-                                    container.addEventListener('click', () => playSong(song.id));
-                                    container.appendChild(li);
-                                    container.appendChild(buttonsContainer);
-                                    
-                                    songListUl.appendChild(container);
-                                });
-                            } else {
-                                const li = document.createElement('li');
-                                li.textContent = 'No tienes canciones aún. Añade alguna!';
-                                songListUl.appendChild(li);
-                            }
-                            songList.style.display = 'block';
-                            toggleSongsBtn.textContent = 'Ocultar Canciones';
-                        });
-                } else {
-                    songList.style.display = 'none';
-                    toggleSongsBtn.textContent = 'Mostrar Mis Canciones';
-                }
-            });
-            
-            // Mostrar/ocultar favoritos
-            toggleFavoritesBtn.addEventListener('click', function() {
-                if (favoritesList.style.display === 'none') {
-                    fetch('/api/favorites')
-                        .then(response => response.json())
-                        .then(favorites => {
-                            const favoritesUl = document.getElementById('favorites');
-                            favoritesUl.innerHTML = '';
-                            
-                            if (favorites.length > 0) {
-                                favorites.forEach(song => {
-                                    const li = document.createElement('li');
-                                    li.textContent = song.name;
-                                    li.dataset.songId = song.id;
-                                    li.addEventListener('click', () => playSong(song.id));
-                                    favoritesUl.appendChild(li);
-                                });
-                            } else {
-                                const li = document.createElement('li');
-                                li.textContent = 'No tienes canciones favoritas aún.';
-                                favoritesUl.appendChild(li);
-                            }
-                            favoritesList.style.display = 'block';
-                            toggleFavoritesBtn.textContent = 'Ocultar Favoritos';
-                        });
-                } else {
-                    favoritesList.style.display = 'none';
-                    toggleFavoritesBtn.textContent = 'Mostrar Favoritos';
-                }
-            });
-            
-            // Añadir canción
-            document.getElementById('add-song-btn').addEventListener('click', function() {
-                const songName = document.getElementById('song-name').value;
-                const songUrl = document.getElementById('song-url').value;
-                
-                if (!songName || !songUrl) {
-                    alert('Por favor ingresa nombre y URL de la canción');
-                    return;
-                }
-                
-                fetch('/api/add_song', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        song_name: songName,
-                        song_url: songUrl
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Canción añadida correctamente!');
-                        window.location.reload();
-                    } else {
-                        alert('Error: ' + (data.error || 'No se pudo añadir la canción'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al conectar con el servidor');
-                });
-            });
-            
-            // Funciones auxiliares
-            function playSong(songId) {
-                fetch('/api/play', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ song_id: songId })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw err; });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.audio_stream_url) {
-                        audioPlayer.src = data.audio_stream_url;
-                        audioPlayer.play()
-                            .then(() => console.log(`Reproduciendo canción ID: ${songId}`))
-                            .catch(e => {
-                                console.error("Error al reproducir:", e);
-                                if (data.fallback_url) {
-                                    window.open(data.fallback_url, '_blank');
-                                }
-                            });
-                    } else if (data.fallback_url) {
-                        window.open(data.fallback_url, '_blank');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    if (error.status === 401) {
-                        window.location.href = '/login';
-                    } else {
-                        alert('Error: ' + (error.message || 'No se pudo reproducir la canción'));
-                        if (error.fallback_url) {
-                            window.open(error.fallback_url, '_blank');
-                        }
-                    }
-                });
-            }
-            
-            function toggleFavorite(songId, button) {
-                fetch('/api/toggle_favorite', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ song_id: songId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.is_favorite !== undefined) {
-                        button.innerHTML = data.is_favorite ? '★' : '☆';
-                        button.classList.toggle('active', data.is_favorite);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    if (error.status === 401) {
-                        window.location.href = '/login';
-                    }
-                });
-            }
-            
-            function showFormatMenu(songId, event) {
-                event.stopPropagation();
-                
-                const menu = document.createElement('div');
-                menu.className = 'format-menu';
-                menu.innerHTML = `
-                    <div class="format-option" data-format="mp3">MP3</div>
-                    <div class="format-option" data-format="wav">WAV</div>
-                    <div class="format-option" data-format="ogg">OGG</div>
-                `;
-                
-                const rect = event.target.getBoundingClientRect();
-                menu.style.position = 'absolute';
-                menu.style.left = `${rect.left}px`;
-                menu.style.top = `${rect.bottom}px`;
-                
-                menu.querySelectorAll('.format-option').forEach(option => {
-                    option.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        downloadSong(songId, option.dataset.format);
-                        document.body.removeChild(menu);
-                    });
-                });
-                
-                document.addEventListener('click', function closeMenu() {
-                    if (document.body.contains(menu)) {
-                        document.body.removeChild(menu);
-                    }
-                    document.removeEventListener('click', closeMenu);
-                });
-                
-                document.body.appendChild(menu);
-            }
-            
-            function downloadSong(songId, format) {
-                fetch('/api/download', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        song_id: songId,
-                        format: format
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la descarga');
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `cancion.${format}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al descargar la canción');
-                });
-            }
-            
-            function deleteSong(songId) {
-                if (confirm('¿Estás seguro de borrar esta canción?')) {
-                    fetch('/api/delete', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ song_id: songId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            window.location.reload();
-                        } else {
-                            alert('Error al borrar la canción');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        if (error.status === 401) {
-                            window.location.href = '/login';
-                        }
-                    });
-                }
-            }
-        });
-
-
-        // Manejar el menú desplegable en móviles
-        document.querySelector('.dropbtn').addEventListener('click', function(e) {
-            if (window.innerWidth <= 768) { // Solo para móviles
-                e.preventDefault();
-                const dropdown = document.querySelector('.dropdown-content');
-                if (dropdown.style.display === 'block') {
-                    dropdown.style.display = 'none';
-                } else {
-                    dropdown.style.display = 'block';
-                }
-            }
-        });
-
-        // Cerrar el menú si se hace clic fuera de él
-        window.addEventListener('click', function(e) {
-            if (!e.target.matches('.dropbtn')) {
-                const dropdowns = document.querySelectorAll('.dropdown-content');
-                dropdowns.forEach(dropdown => {
-                    if (dropdown.style.display === 'block') {
-                        dropdown.style.display = 'none';
-                    }
-                });
-            }
-        });
-
-        // Control del menú desplegable al hacer clic
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuBtn = document.getElementById('menu-btn');
-            const dropdownMenu = document.getElementById('dropdown-menu');
-            
-            menuBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); // Evita que el clic se propague
-                dropdownMenu.classList.toggle('show');
-            });
-            
-            // Cerrar el menú si se hace clic fuera de él
-            window.addEventListener('click', function() {
-                if (dropdownMenu.classList.contains('show')) {
-                    dropdownMenu.classList.remove('show');
-                }
-            });
-            
-            // Evitar que el menú se cierre al hacer clic dentro de él
-            dropdownMenu.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        });
-    </script>
+    <script src="/static/js/main.js"></script>
 </body>
 </html>
