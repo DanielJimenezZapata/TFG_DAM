@@ -6,6 +6,7 @@
     <title>BETAWAVE - {{ username }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="icon" type="image/vnd.icon" href=".ico">
 </head>
 <body>
     <div class="app-container">
@@ -35,16 +36,38 @@
                     <i class="fas fa-search"></i>
                     <input type="text" placeholder="Buscar canciones, artistas...">
                 </div>
-                <div class="user-menu">
-                    <div class="dropdown">
+                <div class="user-menu">                <div class="dropdown">
                         <button class="user-btn">
+                            <img src="https://via.placeholder.com/32" alt="Avatar" class="user-avatar">
                             <span class="username">{{ username }}</span>
-                            <i class="fas fa-user"></i>
+                            <i class="fas fa-chevron-down"></i>
                         </button>
                         <div class="dropdown-content">
-                            <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Perfil</a>
-                            <a href="#"><i class="#"></i> Configuracion</a>
-                            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                            <div class="dropdown-header">
+                                <img src="https://via.placeholder.com/48" alt="Avatar" class="user-avatar-large">
+                                <div class="user-info">
+                                    <span class="username">{{ username }}</span>
+                                    <span class="email">{{ email if email else 'usuario@betawave.com' }}</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('profile') }}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                <span>Perfil</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Configuración</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                <span>Ayuda</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Cerrar Sesión</span>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -83,9 +106,25 @@
                             <div id="now-playing-artist">{{ username }}</div>
                         </div>
                         <button id="favorite-btn"><i class="far fa-heart"></i></button>
-                    </div>
-                    <div class="player-controls">
-                        <audio id="audio-player" controls></audio>
+                    </div>                    <div class="player-controls">
+                        <audio id="audio-player"></audio>
+                        <div class="progress-container">
+                            <span id="current-time">0:00</span>
+                            <div class="progress-bar">
+                                <div class="progress"></div>
+                                <input type="range" class="seek-slider" value="0">
+                            </div>
+                            <span id="duration">0:00</span>
+                        </div>
+                        <div class="control-buttons">
+                            <button id="prev-btn"><i class="fas fa-step-backward"></i></button>
+                            <button id="play-btn"><i class="fas fa-play"></i></button>
+                            <button id="next-btn"><i class="fas fa-step-forward"></i></button>
+                            <div class="volume-control">
+                                <i class="fas fa-volume-up"></i>
+                                <input type="range" class="volume-slider" min="0" max="100" value="100">
+                            </div>
+                        </div>
                     </div>
                 </div>
 

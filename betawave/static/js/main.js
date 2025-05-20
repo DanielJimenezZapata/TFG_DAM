@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Player Configuration
+    const VOLUME_STEP = 0.1;            // Increment/decrement for volume changes
+    const SEEK_STEP = 5;                // Seconds to seek forward/backward
+    const UPDATE_INTERVAL = 100;        // Milliseconds between progress updates
+    const TRANSITION_DURATION = 300;     // Milliseconds for animations
+    
     // Elements
     const audioPlayer = document.getElementById('audio-player');
     const songList = document.getElementById('song-list');
@@ -7,6 +13,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const nowPlayingArtist = document.getElementById('now-playing-artist');
     const nowPlayingCover = document.getElementById('now-playing-cover');
     const favoriteBtn = document.getElementById('favorite-btn');
+    const playBtn = document.getElementById('play-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationEl = document.getElementById('duration');
+    const progressBar = document.querySelector('.progress');
+    const seekSlider = document.querySelector('.seek-slider');
+    const volumeSlider = document.querySelector('.volume-slider');
+    const volumeIcon = document.querySelector('.volume-control i');
     const addSongBtn = document.getElementById('add-song-btn');
     const searchInput = document.querySelector('.search-bar input');
     const navMenuItems = document.querySelectorAll('.nav-menu li');
@@ -21,11 +36,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load initial data
     loadSongs();
     loadFavorites();
-    
-    // Event listeners
+      // Event listeners
     addSongBtn.addEventListener('click', addSong);
     favoriteBtn.addEventListener('click', toggleCurrentFavorite);
     searchInput.addEventListener('input', handleSearch);
+
+    // Player control event listeners
+    playBtn.addEventListener('click', togglePlay);
+    nextBtn.addEventListener('click', playNextSong);
+    prevBtn.addEventListener('click', playPrevSong);
+    seekSlider.addEventListener('input', seekTo);
+    volumeSlider.addEventListener('input', updateVolume);
+    volumeIcon.addEventListener('click', toggleMute);
+
+    // Audio player event listeners
+    audioPlayer.addEventListener('timeupdate', updateProgress);
+    audioPlayer.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audioPlayer.duration);
+        seekSlider.max = Math.floor(audioPlayer.duration);
+    });
+    audioPlayer.addEventListener('play', () => {
+        playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    });
+    audioPlayer.addEventListener('pause', () => {
+        playBtn.innerHTML = '<i class="fas fa-play"></i>';
+    });
+    audioPlayer.addEventListener('ended', playNextSong);
     
     // Navigation event listeners
     navMenuItems.forEach(item => {
@@ -55,34 +91,112 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set "Mis Canciones" as active by default
     document.querySelector('.playlists li:first-child').classList.add('active');
     
+    // Progress update interval
+    setInterval(updateProgress, UPDATE_INTERVAL);
+    
+    // Keyboard shortcuts for player
+    document.addEventListener('keydown', (e) => {
+        // Only if not in an input field
+        if (e.target.tagName === 'INPUT') return;
+        
+        switch(e.key.toLowerCase()) {
+            case ' ':
+                e.preventDefault();
+                togglePlay();
+                break;
+            case 'arrowright':
+                if (e.ctrlKey) {
+                    playNextSong();
+                } else {
+                    audioPlayer.currentTime = Math.min(
+                        audioPlayer.currentTime + SEEK_STEP,
+                        audioPlayer.duration
+                    );
+                }
+                break;
+            case 'arrowleft':
+                if (e.ctrlKey) {
+                    playPrevSong();
+                } else {
+                    audioPlayer.currentTime = Math.max(
+                        audioPlayer.currentTime - SEEK_STEP,
+                        0
+                    );
+                }
+                break;
+            case 'arrowup':
+                e.preventDefault();
+                audioPlayer.volume = Math.min(
+                    audioPlayer.volume + VOLUME_STEP,
+                    1
+                );
+                volumeSlider.value = audioPlayer.volume * 100;
+                updateVolume();
+                break;
+            case 'arrowdown':
+                e.preventDefault();
+                audioPlayer.volume = Math.max(
+                    audioPlayer.volume - VOLUME_STEP,
+                    0
+                );
+                volumeSlider.value = audioPlayer.volume * 100;
+                updateVolume();
+                break;
+            case 'm':
+                toggleMute();
+                break;
+        }
+    });
+    
     // Functions
     function loadSection(sectionName) {
+        console.log('Cambiando a sección:', sectionName);
+        
         // Hide all sections
         allSongsSection.style.display = 'none';
         favoritesSection.style.display = 'none';
+        
+        // Guardar la canción actual antes de cambiar de sección
+        const currentSong = currentPlaylist.find(song => song.id === currentSongId);
         
         switch(sectionName) {
             case 'Inicio':
             case 'Mis Canciones':
                 allSongsSection.style.display = 'block';
-                loadSongs();
                 isPlayingFavorites = false;
+                loadSongs();
                 break;
             case 'Buscar':
                 allSongsSection.style.display = 'block';
-                searchInput.focus();
                 isPlayingFavorites = false;
+                searchInput.focus();
                 break;
             case 'Favoritos':
             case 'Favoritas':
                 favoritesSection.style.display = 'block';
-                loadFavorites();
                 isPlayingFavorites = true;
+                loadFavorites();
                 break;
             case 'Crear Playlist':
                 alert('Funcionalidad de crear playlist en desarrollo');
                 break;
         }
+        
+        // Actualizar la playlist después de cambiar de sección
+        setTimeout(() => {
+            updateCurrentPlaylist();
+            // Si había una canción reproduciéndose, actualizar el estado del reproductor
+            if (currentSong && !audioPlayer.paused) {
+                const newPlaylist = currentPlaylist;
+                // Mantener la reproducción en la nueva sección si la canción existe
+                const songInNewPlaylist = newPlaylist.find(song => song.id === currentSong.id);
+                if (songInNewPlaylist) {
+                    currentSongId = songInNewPlaylist.id;
+                }
+            }
+            console.log('Playlist actualizada después de cambiar sección:', 
+                currentPlaylist.map(song => song.name));
+        }, 100);
     }
     
     function handleSearch(e) {
@@ -107,8 +221,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function loadSongs() {
+        songList.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando canciones...</div>';
+        
         fetch('/api/songs')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al cargar las canciones');
+                }
+                return response.json();
+            })
             .then(songs => {
                 renderSongs(songs, songList, false);
                 // Actualizar la playlist después de cargar las canciones
@@ -117,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error loading songs:', error);
                 songList.innerHTML = '<div class="error-message">Error al cargar canciones</div>';
+                showAlert('Error al cargar las canciones', 'error');
             });
     }
     
@@ -224,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
       function updateCurrentPlaylist() {
         const activeSection = favoritesSection.style.display === 'block' ? favoritesList : songList;
-        // Obtener todas las song-cards visibles y convertirlas a array para mantener el orden
+        // Obtener todas las song-cards visibles
         const songCards = Array.from(activeSection.querySelectorAll('.song-card')).filter(
             card => window.getComputedStyle(card).display !== 'none'
         );
@@ -233,6 +355,15 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Sección activa:', favoritesSection.style.display === 'block' ? 'Favoritos' : 'Todas las canciones');
         console.log('Número de canciones:', songCards.length);
         
+        if (songCards.length === 0) {
+            console.log('No hay canciones visibles en la sección actual');
+            currentPlaylist = [];
+            return;
+        }
+        
+        // Guardar la canción actual antes de actualizar la playlist
+        const currentSong = currentSongId ? currentPlaylist.find(song => song.id === currentSongId) : null;
+        
         // Crear la nueva playlist manteniendo el orden de las canciones
         currentPlaylist = songCards.map(card => ({
             id: card.dataset.songId,
@@ -240,53 +371,65 @@ document.addEventListener('DOMContentLoaded', function() {
             coverUrl: card.querySelector('.song-cover img').src
         }));
 
-        console.log('Playlist actualizada:', currentPlaylist.map(song => song.name).join(', '));
+        // Actualizar isPlayingFavorites basado en la sección actual
         isPlayingFavorites = favoritesSection.style.display === 'block';
-    }
-
-    function playNextSong() {
-        // Asegurarse de que la lista está actualizada
-        updateCurrentPlaylist();
         
-        console.log('Intentando reproducir siguiente canción');
-        console.log('Playlist actual:', currentPlaylist.map(song => song.name).join(', '));
-        console.log('ID canción actual:', currentSongId);
+        console.log('Nueva playlist:', currentPlaylist.map(song => song.name));
+        console.log('Reproduciendo en favoritos:', isPlayingFavorites);
+        console.log('Canción actual ID:', currentSongId);
         
-        if (currentPlaylist.length === 0) {
-            console.log('La playlist está vacía');
+        return currentPlaylist;
+    }    function playNextSong() {
+        console.log('playNextSong llamado');
+        
+        // Verificar y actualizar la playlist si es necesario
+        if (isPlayingFavorites !== (favoritesSection.style.display === 'block')) {
+            updateCurrentPlaylist();
+        }
+            
+        if (!currentPlaylist || currentPlaylist.length === 0) {
+            console.log('Lista de reproducción vacía');
             return;
         }
-        
+
         // Encontrar el índice de la canción actual
         const currentIndex = currentPlaylist.findIndex(song => song.id === currentSongId);
         console.log('Índice actual:', currentIndex);
+
+        // Determinar el siguiente índice
+        let nextIndex;
         
-        // Calcular el índice de la siguiente canción
-        const nextIndex = (currentIndex + 1) % currentPlaylist.length;
-        console.log('Siguiente índice calculado:', nextIndex);
-        
-        // Verificar que no estamos repitiendo la misma canción
-        if (currentPlaylist[nextIndex].id === currentSongId) {
-            console.log('Error: Se intentó reproducir la misma canción');
-            return;
+        // Si no se encuentra la canción actual en la playlist o si es la primera reproducción
+        if (currentIndex === -1) {
+            // Buscar si la última canción reproducida está después en la playlist
+            const lastPlayedIndex = currentSongId ? 
+                currentPlaylist.findIndex(song => parseInt(song.id) > parseInt(currentSongId)) : 0;
+            
+            // Si encontramos una canción después de la última reproducida, empezar desde ahí
+            nextIndex = lastPlayedIndex !== -1 ? lastPlayedIndex : 0;
+        } else {
+            // Avanzar a la siguiente canción
+            nextIndex = (currentIndex + 1) % currentPlaylist.length;
         }
+
+        const nextSong = currentPlaylist[nextIndex];
+        console.log('Siguiente índice:', nextIndex);
+        console.log('Siguiente canción:', nextSong.name);
+
+        // Detener la reproducción actual antes de comenzar la siguiente
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
         
         // Reproducir la siguiente canción
-        const nextSong = currentPlaylist[nextIndex];
-        console.log('Reproduciendo siguiente canción:', {
-            nombre: nextSong.name,
-            id: nextSong.id,
-            indice: nextIndex
-        });
-        
         playSong(nextSong.id, nextSong.name, nextSong.coverUrl);
-    }
-
-    function playSong(songId, songName, coverUrl) {
-        console.log('Iniciando reproducción:', songName);
+    }    function playSong(songId, songName, coverUrl) {
+        console.log('Intentando reproducir:', songName);
         
-        // Actualizar el ID de la canción actual antes de la reproducción
+        // Actualizar currentSongId y UI inmediatamente
         currentSongId = songId;
+        nowPlayingTitle.textContent = songName;
+        nowPlayingArtist.textContent = document.querySelector('.username').textContent;
+        nowPlayingCover.src = coverUrl;
         
         fetch('/api/play', {
             method: 'POST',
@@ -297,33 +440,22 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (!response.ok) {
-                return response.json().then(err => { throw err; });
+                throw new Error('Error al reproducir la canción');
             }
             return response.json();
         })
         .then(data => {
             if (data.audio_stream_url) {
-                // Update player UI
-                nowPlayingTitle.textContent = songName;
-                nowPlayingArtist.textContent = document.querySelector('.username').textContent;
-                nowPlayingCover.src = coverUrl;
-                
-                // Set audio source and play
                 audioPlayer.src = data.audio_stream_url;
-                audioPlayer.play()
-                    .then(() => {
-                        console.log('Reproduciendo:', songName);
-                        updateFavoriteButton(songId);
-                    })
-                    .catch(e => {
-                        console.error("Error al reproducir:", e);
-                        if (data.fallback_url) {
-                            window.open(data.fallback_url, '_blank');
-                        }
-                    });
+                audioPlayer.currentTime = 0; // Asegurar que empezamos desde el principio
+                return audioPlayer.play();
             } else if (data.fallback_url) {
                 window.open(data.fallback_url, '_blank');
             }
+        })
+        .then(() => {
+            console.log('Reproduciendo:', songName);
+            updateFavoriteButton(songId);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -331,9 +463,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = '/login';
             } else {
                 showAlert('Error: ' + (error.message || 'No se pudo reproducir la canción'), 'error');
-                if (error.fallback_url) {
-                    window.open(error.fallback_url, '_blank');
-                }
             }
         });
     }
@@ -609,11 +738,11 @@ document.addEventListener('DOMContentLoaded', function() {
             alert.style.opacity = '0';
             setTimeout(() => alert.remove(), 300);
         }, 3000);
-    }
-      // Audio player event listeners
+    }    // Audio player event listeners
+    let isFirstPlay = true;
+    
     audioPlayer.addEventListener('play', () => {
         console.log('Audio iniciado');
-        // No actualizar la playlist aquí para evitar problemas con el orden
     });
 
     audioPlayer.addEventListener('pause', () => {
@@ -621,21 +750,112 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     audioPlayer.addEventListener('ended', () => {
-        console.log('Audio terminado, reproduciendo siguiente canción');
-        // Asegurarse de que hay un pequeño delay antes de reproducir la siguiente
-        setTimeout(() => {
-            updateCurrentPlaylist(); // Actualizar la playlist justo antes de reproducir la siguiente
+        console.log('Canción terminada');
+        // Si es la primera reproducción, actualizar la bandera
+        if (isFirstPlay) {
+            isFirstPlay = false;
+        }
+        // Asegurarnos de que la canción realmente terminó
+        if (audioPlayer.currentTime >= audioPlayer.duration) {
             playNextSong();
-        }, 100);
+        }
     });
 
+    // Event listener para errores de reproducción
     audioPlayer.addEventListener('error', (e) => {
-        console.error('Error de audio:', e);
+        console.error('Error en la reproducción:', e);
         showAlert('Error al reproducir la canción', 'error');
-        // En caso de error, intentar la siguiente después de un breve delay
-        setTimeout(() => {
-            updateCurrentPlaylist();
-            playNextSong();
-        }, 1000);
+        // Si hay un error, también pasamos a la siguiente
+        playNextSong();
     });
+    
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+
+    function togglePlay() {
+        if (audioPlayer.paused) {
+            audioPlayer.play();
+        } else {
+            audioPlayer.pause();
+        }
+    }
+
+    function updateProgress() {
+        const currentTime = audioPlayer.currentTime;
+        const duration = audioPlayer.duration;
+        
+        // Update time displays
+        currentTimeEl.textContent = formatTime(currentTime);
+        
+        // Update progress bar
+        if (duration) {
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            seekSlider.value = currentTime;
+        }
+    }
+
+    function seekTo() {
+        const time = parseFloat(seekSlider.value);
+        audioPlayer.currentTime = time;
+    }
+
+    function updateVolume() {
+        const volume = volumeSlider.value / 100;
+        audioPlayer.volume = volume;
+        
+        // Update volume icon
+        if (volume === 0) {
+            volumeIcon.className = 'fas fa-volume-mute';
+        } else if (volume < 0.5) {
+            volumeIcon.className = 'fas fa-volume-down';
+        } else {
+            volumeIcon.className = 'fas fa-volume-up';
+        }
+    }
+
+    function toggleMute() {
+        if (audioPlayer.volume > 0) {
+            audioPlayer.dataset.previousVolume = audioPlayer.volume;
+            audioPlayer.volume = 0;
+            volumeSlider.value = 0;
+            volumeIcon.className = 'fas fa-volume-mute';
+        } else {
+            const previousVolume = parseFloat(audioPlayer.dataset.previousVolume) || 1;
+            audioPlayer.volume = previousVolume;
+            volumeSlider.value = previousVolume * 100;
+            volumeIcon.className = previousVolume < 0.5 ? 'fas fa-volume-down' : 'fas fa-volume-up';
+        }
+    }
+
+    function playPrevSong() {
+        if (audioPlayer.currentTime > 3) {
+            // Si han pasado más de 3 segundos, volver al inicio de la canción actual
+            audioPlayer.currentTime = 0;
+            return;
+        }
+
+        if (!currentPlaylist || currentPlaylist.length === 0) {
+            console.log('Lista de reproducción vacía');
+            return;
+        }
+
+        // Encontrar el índice de la canción actual
+        const currentIndex = currentPlaylist.findIndex(song => song.id === currentSongId);
+        
+        // Calcular el índice anterior
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : currentPlaylist.length - 1;
+        
+        const prevSong = currentPlaylist[prevIndex];
+        
+        // Detener la reproducción actual antes de comenzar la anterior
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        
+        // Reproducir la canción anterior
+        playSong(prevSong.id, prevSong.name, prevSong.coverUrl);
+    }
 });
