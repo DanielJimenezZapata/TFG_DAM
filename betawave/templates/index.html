@@ -41,7 +41,9 @@
                             <span class="username">{{ username }}</span>
                             <i class="fas fa-user"></i>
                         </button>
-                        <div class="dropdown-content">                            <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Perfil</a>
+                        <div class="dropdown-content">
+                            <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Perfil</a>
+                            <a href="#"><i class="#"></i> Configuracion</a>
                             <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
                         </div>
                     </div>
