@@ -48,6 +48,12 @@ def init_db():
                   FOREIGN KEY(user_id) REFERENCES users(id),
                   FOREIGN KEY(song_id) REFERENCES songs(id))''')
     
+    c.execute('''CREATE TABLE IF NOT EXISTS user_config
+                 (user_id INTEGER PRIMARY KEY,
+                  dark_mode BOOLEAN DEFAULT 0,
+                  default_volume INTEGER DEFAULT 50,
+                  FOREIGN KEY(user_id) REFERENCES users(id))''')
+    
     conn.commit()
     conn.close()
 
@@ -163,6 +169,32 @@ def is_favorite(user_id, song_id):
     result = c.fetchone() is not None
     conn.close()
     return result
+
+def get_user_config(user_id):
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+    c.execute("SELECT dark_mode, default_volume FROM user_config WHERE user_id=?", (user_id,))
+    config = c.fetchone()
+    conn.close()
+    
+    if config is None:
+        # Return default values if no config exists
+        return {'dark_mode': False, 'default_volume': 50}
+    return {'dark_mode': bool(config[0]), 'default_volume': config[1]}
+
+def save_user_config(user_id, dark_mode, default_volume):
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+    try:
+        c.execute("""INSERT OR REPLACE INTO user_config (user_id, dark_mode, default_volume) 
+                     VALUES (?, ?, ?)""", (user_id, dark_mode, default_volume))
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return False
+    finally:
+        conn.close()
 
 # Helper decorator
 def login_required(f):
@@ -296,6 +328,8 @@ def profile():
     }
     
     return render_template('profile.html', user=user, stats=stats)
+
+
 
 # API Endpoints
 @app.route('/api/songs', methods=['GET'])
@@ -457,6 +491,31 @@ def is_favorite_route():
         return jsonify({'is_favorite': result})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/config')
+@login_required
+def config():
+    user_config = get_user_config(session['user_id'])
+    return render_template('config.html', 
+                         username=session.get('username'),
+                         email=session.get('email'),
+                         config=user_config)
+
+@app.route('/save_config', methods=['POST'])
+def save_config():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    try:
+        data = request.get_json()
+        dark_mode = data.get('darkMode', False)
+        default_volume = data.get('defaultVolume', 50)
+        
+        success = save_user_config(session['user_id'], dark_mode, default_volume)
+        return jsonify({'success': success})
+    except Exception as e:
+        print(f"Error saving config: {e}")
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == "__main__":
     init_db()

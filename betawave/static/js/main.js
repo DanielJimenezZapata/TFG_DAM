@@ -858,4 +858,32 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reproducir la canción anterior
         playSong(prevSong.id, prevSong.name, prevSong.coverUrl);
     }
+    
+    // Theme-aware styles for player elements
+function updatePlayerTheme() {
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const player = document.querySelector('.player');
+    if (player) {
+        player.classList.toggle('dark', isDarkMode);
+    }
+}
+
+// Monitor for theme changes
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+            updatePlayerTheme();
+        }
+    });
+});
+
+observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class']
+});
+
+// Update theme on initial load
+document.addEventListener('DOMContentLoaded', () => {
+    updatePlayerTheme();
+});
 });

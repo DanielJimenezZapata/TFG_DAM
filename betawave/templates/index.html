@@ -36,38 +36,16 @@
                     <i class="fas fa-search"></i>
                     <input type="text" placeholder="Buscar canciones, artistas...">
                 </div>
-                <div class="user-menu">                <div class="dropdown">
+                <div class="user-menu">
+                    <div class="dropdown">
                         <button class="user-btn">
-                            <img src="https://via.placeholder.com/32" alt="Avatar" class="user-avatar">
                             <span class="username">{{ username }}</span>
-                            <i class="fas fa-chevron-down"></i>
+                            <i class="fas fa-user"></i>
                         </button>
                         <div class="dropdown-content">
-                            <div class="dropdown-header">
-                                <img src="https://via.placeholder.com/48" alt="Avatar" class="user-avatar-large">
-                                <div class="user-info">
-                                    <span class="username">{{ username }}</span>
-                                    <span class="email">{{ email if email else 'usuario@betawave.com' }}</span>
-                                </div>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <a href="{{ url_for('profile') }}" class="dropdown-item">
-                                <i class="fas fa-user"></i>
-                                <span>Perfil</span>
-                            </a>
-                            <a href="#" class="dropdown-item">
-                                <i class="fas fa-cog"></i>
-                                <span>Configuración</span>
-                            </a>
-                            <a href="#" class="dropdown-item">
-                                <i class="fas fa-question-circle"></i>
-                                <span>Ayuda</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="{{ url_for('logout') }}" class="dropdown-item">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Cerrar Sesión</span>
-                            </a>
+                            <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Perfil</a>
+                            <a href="{{ url_for('config') }}"><i class="fas fa-cog"></i> Configuración</a>
+                            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
                         </div>
                     </div>
                 </div>

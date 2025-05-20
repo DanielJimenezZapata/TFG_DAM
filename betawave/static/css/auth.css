@@ -140,3 +140,42 @@ body {
     background-color: rgba(46, 204, 113, 0.2);
     color: var(--success-color);
 }
+
+/* Dark mode styles for auth pages */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode .auth-container {
+    background-color: #282828;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode input {
+    background-color: #333;
+    color: #fff;
+    border-color: #444;
+}
+
+body.dark-mode input:focus {
+    border-color: #1db954;
+}
+
+body.dark-mode .auth-links a {
+    color: #1db954;
+}
+
+body.dark-mode .auth-links a:hover {
+    color: #1ed760;
+}
+
+body.dark-mode .error-message {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-color: #ff4444;
+}
+
+body.dark-mode .success-message {
+    background-color: rgba(29, 185, 84, 0.1);
+    border-color: #1db954;
+}

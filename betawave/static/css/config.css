@@ -1,0 +1,240 @@
+.config-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.config-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.back-button {
+    text-decoration: none;
+    color: #666;
+    font-size: 16px;
+    margin-right: 20px;
+    transition: color 0.3s;
+}
+
+.back-button:hover {
+    color: #1db954;
+}
+
+.config-header h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.config-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.config-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.config-option {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.config-option:last-child {
+    border-bottom: none;
+}
+
+.config-option i {
+    font-size: 20px;
+    margin-right: 15px;
+    color: #1db954;
+    width: 24px;
+    text-align: center;
+}
+
+.config-option span {
+    flex: 1;
+    color: #555;
+}
+
+.user-value, .email-value {
+    color: #888;
+    margin-left: 10px;
+}
+
+/* Switch styling */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #1db954;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #1db954;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Volume slider styling */
+input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 200px;
+    height: 8px;
+    background: #ddd;
+    border-radius: 4px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #1db954;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.config-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.save-button {
+    background-color: #1db954;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.save-button i {
+    margin-right: 8px;
+}
+
+.save-button:hover {
+    background-color: #1ed760;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode .config-section {
+    background: #282828;
+}
+
+body.dark-mode .config-header {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .config-option {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .back-button,
+body.dark-mode .config-header h1,
+body.dark-mode .config-section h2 {
+    color: #fff;
+}
+
+body.dark-mode .config-option span {
+    color: #ddd;
+}
+
+body.dark-mode .user-value,
+body.dark-mode .email-value {
+    color: #999;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .config-container {
+        padding: 10px;
+    }
+    
+    .config-section {
+        padding: 15px;
+    }
+    
+    .config-option {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .config-option i {
+        margin-bottom: 10px;
+    }
+    
+    input[type="range"] {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .switch {
+        margin-top: 10px;
+    }
+}

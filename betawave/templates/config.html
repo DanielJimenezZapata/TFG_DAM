@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BETAWAVE - Configuración</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/config.css">
+    <link rel="icon" type="image/vnd.icon" href=".ico">
+    <script defer src="/static/js/config.js"></script>
+</head>
+<body>
+    <div class="config-container">
+        <header class="config-header">
+            <a href="{{ url_for('index') }}" class="back-button">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+            <h1>Configuración</h1>
+        </header>
+        
+        <div class="config-content">
+            <section class="config-section">
+                <h2>Cuenta</h2>
+                <div class="config-option">
+                    <i class="fas fa-user"></i>
+                    <span>Nombre de usuario:</span>
+                    <span class="user-value" data-value="{{ username }}">{{ username }}</span>
+                </div>
+                <div class="config-option">
+                    <i class="fas fa-envelope"></i>
+                    <span>Email:</span>
+                    <span class="email-value" data-value="{{ email }}">{{ email }}</span>
+                </div>
+            </section>
+
+            <section class="config-section">
+                <h2>Apariencia</h2>
+                <div class="config-option">
+                    <i class="fas fa-moon"></i>
+                    <span>Modo oscuro</span>
+                    <label class="switch">
+                        <input type="checkbox" id="darkModeToggle" {% if config.dark_mode %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="config-section">
+                <h2>Reproducción</h2>
+                <div class="config-option">
+                    <i class="fas fa-volume-up"></i>
+                    <span>Volumen predeterminado</span>
+                    <input type="range" id="defaultVolume" min="0" max="100" value="{{ config.default_volume }}">
+                    <span class="volume-value">{{ config.default_volume }}%</span>
+                </div>
+            </section>
+
+            <div class="config-actions">
+                <button class="save-button">
+                    <i class="fas fa-save"></i> Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

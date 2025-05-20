@@ -270,3 +270,42 @@
         font-size: 20px;
     }
 }
+
+/* Dark mode styles for profile page */
+body.dark-mode .profile-container {
+    background-color: #282828;
+}
+
+body.dark-mode .profile-header {
+    border-bottom-color: #404040;
+}
+
+body.dark-mode .profile-section {
+    background-color: #333;
+}
+
+body.dark-mode .profile-stats {
+    background-color: #333;
+}
+
+body.dark-mode .stat-card {
+    background-color: #404040;
+}
+
+body.dark-mode .profile-form input {
+    background-color: #404040;
+    color: #fff;
+    border-color: #505050;
+}
+
+body.dark-mode .profile-form input:focus {
+    border-color: #1db954;
+}
+
+body.dark-mode .back-button {
+    color: #fff;
+}
+
+body.dark-mode .back-button:hover {
+    color: #1db954;
+}
