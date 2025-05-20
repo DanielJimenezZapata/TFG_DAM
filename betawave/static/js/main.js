@@ -423,27 +423,56 @@ document.addEventListener('DOMContentLoaded', function() {
             favoriteBtn.classList.toggle('active', isFavorite);
         });
     }
-    
-    function showDownloadMenu(songId, event) {
+      function showDownloadMenu(songId, event) {
+        event.stopPropagation();
+        
+        // Remove any existing menus
+        const existingMenu = document.querySelector('.format-menu');
+        if (existingMenu) {
+            document.body.removeChild(existingMenu);
+        }
+
         const menu = document.createElement('div');
         menu.className = 'format-menu';
         menu.innerHTML = `
-            <div class="format-option" data-format="mp3">MP3</div>
-            <div class="format-option" data-format="wav">WAV</div>
-            <div class="format-option" data-format="ogg">OGG</div>
+            <div class="format-option" data-format="mp3" role="button" tabindex="0">MP3</div>
+            <div class="format-option" data-format="wav" role="button" tabindex="0">WAV</div>
+            <div class="format-option" data-format="ogg" role="button" tabindex="0">OGG</div>
         `;
         
-        const rect = event.target.getBoundingClientRect();
+        // Position the menu
+        const rect = event.target.closest('.song-action-btn').getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
         menu.style.position = 'fixed';
-        menu.style.left = `${rect.left}px`;
-        menu.style.top = `${rect.bottom + window.scrollY}px`;
         menu.style.zIndex = '1000';
+        
+        // Determine if menu should appear above or below the button
+        if (spaceBelow < 200 && rect.top > 200) {
+            menu.style.bottom = `${window.innerHeight - rect.top}px`;
+            menu.style.left = `${rect.left}px`;
+        } else {
+            menu.style.top = `${rect.bottom + window.scrollY}px`;
+            menu.style.left = `${rect.left}px`;
+        }
+        
+        // Add keyboard navigation
+        menu.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeMenu();
+            } else if (e.key === 'Enter') {
+                const option = e.target.closest('.format-option');
+                if (option) {
+                    downloadSong(songId, option.dataset.format);
+                    closeMenu();
+                }
+            }
+        });
         
         menu.querySelectorAll('.format-option').forEach(option => {
             option.addEventListener('click', (e) => {
                 e.stopPropagation();
                 downloadSong(songId, option.dataset.format);
-                document.body.removeChild(menu);
+                closeMenu();
             });
         });
         
@@ -454,7 +483,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.removeEventListener('click', closeMenu);
         };
         
-        document.addEventListener('click', closeMenu);
+        // Close menu when clicking outside
+        setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+        }, 0);
+        
         document.body.appendChild(menu);
     }
     
