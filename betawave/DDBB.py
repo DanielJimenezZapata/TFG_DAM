@@ -4,12 +4,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 def init_db():
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT UNIQUE NOT NULL,
                   password TEXT NOT NULL,
-                  email TEXT)''')
+                  email TEXT,
+                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''')
     
     c.execute('''CREATE TABLE IF NOT EXISTS songs
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,7 +33,7 @@ def add_user(username, password, email=None):
     c = conn.cursor()
     try:
         hashed_pw = generate_password_hash(password)
-        c.execute("INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
+        c.execute("INSERT INTO users (username, password, email, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
                  (username, hashed_pw, email))
         conn.commit()
         return True

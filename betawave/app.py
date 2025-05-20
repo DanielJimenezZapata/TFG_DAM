@@ -16,11 +16,23 @@ def init_db():
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
     
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  username TEXT UNIQUE NOT NULL,
-                  password TEXT NOT NULL,
-                  email TEXT)''')
+    # Crear tabla users si no existe
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT
+    )''')
+      # Verificar si existe la columna created_at
+    c.execute("PRAGMA table_info(users)")
+    columns = [column[1] for column in c.fetchall()]
+    if 'created_at' not in columns:
+        # Añadir columna created_at
+        c.execute("ALTER TABLE users ADD COLUMN created_at DATETIME")
+        # Actualizar registros existentes con la fecha actual
+        from datetime import datetime
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        c.execute("UPDATE users SET created_at = ? WHERE created_at IS NULL", (current_time,))
     
     c.execute('''CREATE TABLE IF NOT EXISTS songs
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,9 +55,11 @@ def add_user(username, password, email=None):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
     try:
+        from datetime import datetime
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         hashed_pw = generate_password_hash(password)
-        c.execute("INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
-                 (username, hashed_pw, email))
+        c.execute("INSERT INTO users (username, password, email, created_at) VALUES (?, ?, ?, ?)",
+                 (username, hashed_pw, email, current_time))
         conn.commit()
         return True
     except sqlite3.IntegrityError:
@@ -199,6 +213,89 @@ def logout():
     session.clear()
     flash('Has cerrado sesión correctamente', 'info')
     return redirect(url_for('login'))
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+          # Obtener información del usuario actual
+        conn = sqlite3.connect('music.db')
+        c = conn.cursor()
+        c.execute("SELECT password, email FROM users WHERE id = ?", (session['user_id'],))
+        user_data = c.fetchone()
+        
+        if not user_data:
+            flash('Usuario no encontrado', 'error')
+            conn.close()
+            return redirect(url_for('logout'))
+            
+        if user_data:
+            current_stored_password = user_data[0]
+            
+            # Verificar si se está intentando cambiar la contraseña
+            if current_password and new_password:
+                if not check_password_hash(current_stored_password, current_password):
+                    flash('La contraseña actual es incorrecta', 'error')
+                    return redirect(url_for('profile'))
+                
+                # Actualizar contraseña
+                new_password_hash = generate_password_hash(new_password)
+                c.execute("UPDATE users SET password = ? WHERE id = ?", 
+                         (new_password_hash, session['user_id']))
+            
+            # Actualizar email y username
+            c.execute("UPDATE users SET email = ?, username = ? WHERE id = ?", 
+                     (email, username, session['user_id']))
+            conn.commit()
+            
+            # Actualizar el nombre de usuario en la sesión
+            session['username'] = username
+            
+            flash('Perfil actualizado correctamente', 'success')
+        conn.close()
+        return redirect(url_for('profile'))
+    
+    # Obtener información del usuario y estadísticas
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+      # Obtener datos del usuario
+    c.execute("SELECT username, email FROM users WHERE id = ?", (session['user_id'],))
+    user_data = c.fetchone()
+    if not user_data:
+        flash('Usuario no encontrado', 'error')
+        return redirect(url_for('logout'))
+        
+    user = {'username': user_data[0], 'email': user_data[1] if user_data[1] else ''}
+    
+    # Obtener estadísticas
+    c.execute("SELECT COUNT(*) FROM songs WHERE user_id = ?", (session['user_id'],))
+    songs_count = c.fetchone()[0]
+    
+    c.execute("SELECT COUNT(*) FROM favorites WHERE user_id = ?", (session['user_id'],))
+    favorites_count = c.fetchone()[0]
+      # Obtener fecha de registro y calcular días
+    c.execute("SELECT created_at FROM users WHERE id = ?", (session['user_id'],))
+    created_at = c.fetchone()[0]
+    if created_at:
+        from datetime import datetime
+        created_date = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
+        days_registered = (datetime.now() - created_date).days
+    else:
+        days_registered = 0
+    
+    conn.close()
+    
+    stats = {
+        'songs_count': songs_count,
+        'favorites_count': favorites_count,
+        'days_registered': days_registered
+    }
+    
+    return render_template('profile.html', user=user, stats=stats)
 
 # API Endpoints
 @app.route('/api/songs', methods=['GET'])

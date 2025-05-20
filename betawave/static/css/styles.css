@@ -70,6 +70,14 @@ body {
     border-radius: 4px;
 }
 
+.nav-menu li a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
 .nav-menu li i {
     margin-right: 15px;
     width: 24px;
