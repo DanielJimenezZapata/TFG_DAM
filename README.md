@@ -1,6 +1,6 @@
 # 🎵 TFG_DAM
 
-> Aplicación web para reproducir, organizar y gestionar tu biblioteca musical personalizada.  
+> Aplicación Flask que como objetivo es el de añadir tus canciones y reproducirlas, siendo un creador de "playlists".  
 
 ---
 
