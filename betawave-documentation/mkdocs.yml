@@ -1,0 +1,35 @@
+betawave-documentation
+├── docs
+│   ├── 1-project-data
+│   │   └── index.md
+│   ├── 2-general-description
+│   │   └── index.md
+│   ├── 3-objectives
+│   │   └── index.md
+│   ├── 4-requirements
+│   │   └── index.md
+│   ├── 5-technologies
+│   │   └── index.md
+│   ├── 6-architecture
+│   │   └── diagrams
+│   │       └── index.md
+│   ├── 7-planning
+│   │   └── index.md
+│   ├── 8-market-analysis
+│   │   └── index.md
+│   ├── 9-use-cases
+│   │   └── index.md
+│   ├── 10-security
+│   │   └── index.md
+│   ├── 11-testing
+│   │   └── index.md
+│   ├── 12-deployment
+│   │   └── index.md
+│   ├── 13-conclusions
+│   │   └── index.md
+│   └── 14-appendix
+│       └── index.md
+├── assets
+│   └── images
+├── README.md
+└── mkdocs.yml
