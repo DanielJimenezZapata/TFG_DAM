@@ -1,16 +1,16 @@
 # TFG_DAM
 
-## INICIO DE SESION:
+### INICIO DE SESION:
 - User
 - Password
 
-## REGISTRO:
+### REGISTRO:
 - User
 - Mail (opcional)
 - Password
 _____________________________________________________________________________________________________________________________________
 
-## INICIO:
+### INICIO:
 - Añadir canción con URL + NOMBRE que le quieras poner (abajo de la pagina)
 - Buscar -> Busca por nombre de la canción
 - Añadir a favorito -> Pon el cursor encima de la canción y te saldrán 3 iconos. Este botón es el del corazón.
@@ -21,7 +21,7 @@ ________________________________________________________________________________
 - Barra de reproducción de música -> Se empezara a reproducir la canción. En esta zona puedes: subir y bajar el volumen, pasar a la siguiente canción y a la anterior, añadir a favoritos y adelantar y atrasar la canción con la barra verde.
 ______________________________________________________________________________________________________________________________________
 
-## PERFIL:
+### PERFIL:
 El perfil se encuentra poniendo el cursor encima del nombre de usuario arriba a la derecha de la pagina.
 En él puedes cambiar:
 - Nombre de usuario
@@ -31,10 +31,10 @@ Tras hacer los cambios que quieras, tienes que dar al botón de GUARDAR CAMBIOS.
 
 _______________________________________________________________________________________________________________________________________
 
-## CERRAR SESIÓN:
+### CERRAR SESIÓN:
 Cerrar sesión se encuentra poniendo el cursor encima del nombre de usuario arriba a la derecha de la pagina.
 
 _______________________________________________________________________________________________________________________________________
 
-## CONFIGURACIÓN:
+### CONFIGURACIÓN:
 Está en desarrollo.
