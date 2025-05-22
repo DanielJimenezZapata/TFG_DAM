@@ -30,7 +30,7 @@
   Pasa el cursor sobre la canción → haz clic en el icono del corazón.
 
 - 📥 **Descargar canción:**  
-  Pasa el cursor sobre la canción → haz clic en el **segundo icono** (papelera 🗑️).
+  Pasa el cursor sobre la canción → haz clic en el **segundo icono**.
 
 - 🗑️ **Eliminar canción:**  
   Pasa el cursor sobre la canción → haz clic en el **último icono**.
