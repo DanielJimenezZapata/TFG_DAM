@@ -10,7 +10,7 @@
 - 👤 Usuario  
 - 🔑 Contraseña
 
-### 📝 Registro
+### Registro
 - 👤 Usuario  
 - 📧 Correo electrónico *(opcional)*  
 - 🔑 Contraseña
