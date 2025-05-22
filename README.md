@@ -1,40 +1,82 @@
-# TFG_DAM
+# 🎵 TFG_DAM
 
-### INICIO DE SESION:
-- User
-- Password
+> Aplicación web para reproducir, organizar y gestionar tu biblioteca musical personalizada.  
 
-### REGISTRO:
-- User
-- Mail (opcional)
-- Password
-_____________________________________________________________________________________________________________________________________
+---
 
-### INICIO:
-- Añadir canción con URL + NOMBRE que le quieras poner (abajo de la pagina)
-- Buscar -> Busca por nombre de la canción
-- Añadir a favorito -> Pon el cursor encima de la canción y te saldrán 3 iconos. Este botón es el del corazón.
-- Descargar canción -> Pon el cursor encima de la canción y te saldrán 3 iconos. Este botón es el segundo botón (papelera).
-- Eliminar canción ->  Pon el cursor encima de la canción y te saldrán 3 iconos. Este botón es el último botón.
-- Reproducir canción -> Sitúate encima de la canción que quieras reproducir y hazle click 1 vez. Tarda unos pocos segundos para reproducir.
-- Reproducción siguiente canción -> Cuando se termina la canción pasa a la siguiente canción. Si estás situado en favoritos y reproduces favoritos hace lo mismo.
-- Barra de reproducción de música -> Se empezara a reproducir la canción. En esta zona puedes: subir y bajar el volumen, pasar a la siguiente canción y a la anterior, añadir a favoritos y adelantar y atrasar la canción con la barra verde.
-______________________________________________________________________________________________________________________________________
+## 🚪 Autenticación
 
-### PERFIL:
-El perfil se encuentra poniendo el cursor encima del nombre de usuario arriba a la derecha de la pagina.
-En él puedes cambiar:
-- Nombre de usuario
-- Email
-- Contraseña -> Poniendo la contraseña actual y la nueva contraseña
-Tras hacer los cambios que quieras, tienes que dar al botón de GUARDAR CAMBIOS.
+### 🔐 Inicio de sesión
+- 👤 Usuario  
+- 🔑 Contraseña
 
-_______________________________________________________________________________________________________________________________________
+### 📝 Registro
+- 👤 Usuario  
+- 📧 Correo electrónico *(opcional)*  
+- 🔑 Contraseña
 
-### CERRAR SESIÓN:
-Cerrar sesión se encuentra poniendo el cursor encima del nombre de usuario arriba a la derecha de la pagina.
+---
 
-_______________________________________________________________________________________________________________________________________
+## 🏠 Inicio
 
-### CONFIGURACIÓN:
-Está en desarrollo.
+### ✨ Funciones principales:
+- ➕ **Añadir canción:**  
+  Ingresa una URL y el nombre que desees (abajo de la página).
+
+- 🔍 **Buscar canción:**  
+  Busca por nombre de la canción desde la barra superior.
+
+- ❤️ **Añadir a favoritos:**  
+  Pasa el cursor sobre la canción → haz clic en el icono del corazón.
+
+- 📥 **Descargar canción:**  
+  Pasa el cursor sobre la canción → haz clic en el **segundo icono** (papelera 🗑️).
+
+- 🗑️ **Eliminar canción:**  
+  Pasa el cursor sobre la canción → haz clic en el **último icono**.
+
+- ▶️ **Reproducir canción:**  
+  Haz clic una vez sobre la canción. Tarda unos segundos en empezar.
+
+- ⏭️ **Reproducción continua:**  
+  Cuando termina una canción, se reproduce la siguiente. También funciona en la vista de favoritos.
+
+- 🎚️ **Barra de reproducción:**
+  - Subir / bajar volumen 🔊🔈  
+  - Canción anterior ⏮️ / siguiente ⏭️  
+  - Añadir a favoritos ❤️  
+  - Adelantar o retroceder con la barra verde ⏩
+
+---
+
+## 👤 Perfil de Usuario
+
+📍 Accede pasando el cursor sobre tu nombre de usuario (arriba a la derecha).  
+
+### 🔧 Puedes modificar:
+- 🧾 Nombre de usuario  
+- 📧 Email  
+- 🔐 Contraseña *(requiere contraseña actual y nueva)*
+
+✅ Recuerda hacer clic en **Guardar Cambios** tras editar tus datos.
+
+---
+
+## 🔓 Cerrar Sesión
+
+📍 También desde el menú del nombre de usuario (arriba a la derecha).
+
+---
+
+## ⚙️ Configuración
+
+🚧 En desarrollo...
+
+---
+
+## 📌 Notas finales
+
+- Proyecto realizado como parte del **TFG** del ciclo **DAM (Desarrollo de Aplicaciones Multiplataforma)**.
+- Si tienes dudas o sugerencias, no dudes en contribuir o abrir un issue.
+
+---
