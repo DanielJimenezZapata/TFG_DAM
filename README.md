@@ -68,7 +68,7 @@
 
 ---
 
-## ⚙ Configuración
+## Configuración
 
 En desarrollo...
 
