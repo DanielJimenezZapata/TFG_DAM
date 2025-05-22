@@ -4,9 +4,9 @@
 
 ---
 
-## 🚪 Autenticación
+## Autenticación
 
-### 🔐 Inicio de sesión
+### Inicio de sesión
 - 👤 Usuario  
 - 🔑 Contraseña
 
@@ -17,9 +17,9 @@
 
 ---
 
-## 🏠 Inicio
+## Inicio
 
-### ✨ Funciones principales:
+### Funciones principales:
 - ➕ **Añadir canción:**  
   Ingresa una URL y el nombre que desees (abajo de la página).
 
@@ -49,11 +49,11 @@
 
 ---
 
-## 👤 Perfil de Usuario
+## Perfil de Usuario
 
 📍 Accede pasando el cursor sobre tu nombre de usuario (arriba a la derecha).  
 
-### 🔧 Puedes modificar:
+### Puedes modificar:
 - 🧾 Nombre de usuario  
 - 📧 Email  
 - 🔐 Contraseña *(requiere contraseña actual y nueva)*
@@ -62,15 +62,15 @@
 
 ---
 
-## 🔓 Cerrar Sesión
+## Cerrar Sesión
 
 📍 También desde el menú del nombre de usuario (arriba a la derecha).
 
 ---
 
-## ⚙️ Configuración
+## ⚙ Configuración
 
-🚧 En desarrollo...
+En desarrollo...
 
 ---
 
