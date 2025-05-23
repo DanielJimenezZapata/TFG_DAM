@@ -64,13 +64,9 @@
                                 <td>{{ user.username }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>{{ user.created_at }}</td>
-                                <td>{{ user.role }}</td>
-                                <td class="actions">
-                                    <button class="btn-edit" onclick="editUser({{ user.id }}, '{{ user.username }}', '{{ user.email }}', '{{ user.role }}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                <td>{{ user.role }}</td>                                <td class="actions">
                                     {% if user.role != 'admin' %}
-                                    <button class="btn-delete" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                    <button class="btn-delete" onclick="deleteUser('{{ user.id }}', '{{ user.username }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                     {% endif %}

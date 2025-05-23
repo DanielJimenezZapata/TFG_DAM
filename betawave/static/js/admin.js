@@ -1,19 +1,5 @@
 // Funciones para el panel de administración
 
-function editUser(userId, username, email, role) {
-    const modal = document.getElementById('editUserModal');
-    document.getElementById('userId').value = userId;
-    document.getElementById('editUsername').value = username;
-    document.getElementById('editEmail').value = email;
-    document.getElementById('editRole').value = role;
-    modal.style.display = 'block';
-}
-
-function closeModal() {
-    const modal = document.getElementById('editUserModal');
-    modal.style.display = 'none';
-}
-
 function deleteUser(userId, username) {
     if (confirm(`¿Estás seguro de que deseas eliminar al usuario ${username}?`)) {
         fetch('/admin/delete_user', {
@@ -38,10 +24,4 @@ function deleteUser(userId, username) {
     }
 }
 
-// Cerrar el modal si se hace clic fuera de él
-window.onclick = function(event) {
-    const modal = document.getElementById('editUserModal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-}
+

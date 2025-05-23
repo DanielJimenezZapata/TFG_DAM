@@ -395,33 +395,7 @@ def admin_dashboard():
     conn.close()
     return render_template('admin.html', users=users)
 
-@app.route('/admin/update_user', methods=['POST'])
-@login_required
-@admin_required
-def admin_update_user():
-    user_id = request.form.get('userId')
-    username = request.form.get('username')
-    email = request.form.get('email')
-    role = request.form.get('role')
-    
-    conn = sqlite3.connect('music.db')
-    c = conn.cursor()
-    try:
-        c.execute("""
-            UPDATE users 
-            SET username = ?, email = ?, role = ? 
-            WHERE id = ?
-        """, (username, email, role, user_id))
-        conn.commit()
-        flash('Usuario actualizado correctamente', 'success')
-    except sqlite3.IntegrityError:
-        flash('El nombre de usuario ya existe', 'error')
-    except Exception as e:
-        flash('Error al actualizar usuario', 'error')
-    finally:
-        conn.close()
-    
-    return redirect(url_for('admin_dashboard'))
+
 
 @app.route('/admin/delete_user', methods=['POST'])
 @login_required
