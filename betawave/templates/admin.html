@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - BETAWAVE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>BETAWAVE Admin</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/admin" class="active"><i class="fas fa-users"></i> <span>Gestión de Usuarios</span></a></li>
+                <li><a href="/"><i class="fas fa-home"></i> <span>Volver a BETAWAVE</span></a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header>
+                <h1>Panel de Administración</h1>
+                <div class="user-menu">
+                    <div class="dropdown">
+                        <button class="user-btn">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Admin</span>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </header>            <div class="admin-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <div class="users-table">
+                    <h2>Gestión de Usuarios</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Fecha Registro</th>
+                                <th>Rol</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.created_at }}</td>
+                                <td>{{ user.role }}</td>
+                                <td class="actions">
+                                    <button class="btn-edit" onclick="editUser({{ user.id }}, '{{ user.username }}', '{{ user.email }}', '{{ user.role }}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    {% if user.role != 'admin' %}
+                                    <button class="btn-delete" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                    <div class="recent-songs">
+                        <h2>Canciones Recientes</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Usuario</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for song in recent_songs %}
+                                <tr>
+                                    <td>{{ song.name }}</td>
+                                    <td>{{ song.username }}</td>
+                                    <td>{{ song.created_at }}</td>
+                                    <td>
+                                        <button class="btn-delete" onclick="deleteSong('{{ song.id }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

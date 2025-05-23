@@ -21,15 +21,20 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        email TEXT
+        email TEXT,
+        role TEXT DEFAULT 'user',
+        created_at DATETIME
     )''')
-      # Verificar si existe la columna created_at
+
+    # Verificar si existe la columna role
     c.execute("PRAGMA table_info(users)")
     columns = [column[1] for column in c.fetchall()]
+    if 'role' not in columns:
+        c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
+
+    # Verificar si existe la columna created_at
     if 'created_at' not in columns:
-        # Añadir columna created_at
         c.execute("ALTER TABLE users ADD COLUMN created_at DATETIME")
-        # Actualizar registros existentes con la fecha actual
         from datetime import datetime
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         c.execute("UPDATE users SET created_at = ? WHERE created_at IS NULL", (current_time,))
@@ -57,15 +62,15 @@ def init_db():
     conn.commit()
     conn.close()
 
-def add_user(username, password, email=None):
+def add_user(username, password, email=None, role='user'):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
     try:
         from datetime import datetime
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         hashed_pw = generate_password_hash(password)
-        c.execute("INSERT INTO users (username, password, email, created_at) VALUES (?, ?, ?, ?)",
-                 (username, hashed_pw, email, current_time))
+        c.execute("INSERT INTO users (username, password, email, role, created_at) VALUES (?, ?, ?, ?, ?)",
+                 (username, hashed_pw, email, role, current_time))
         conn.commit()
         return True
     except sqlite3.IntegrityError:
@@ -76,11 +81,11 @@ def add_user(username, password, email=None):
 def verify_user(username, password):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    c.execute("SELECT id, username, password FROM users WHERE username=?", (username,))
+    c.execute("SELECT id, username, password, role FROM users WHERE username=?", (username,))
     user = c.fetchone()
     conn.close()
     if user and check_password_hash(user[2], password):
-        return {'id': user[0], 'username': user[1]}
+        return {'id': user[0], 'username': user[1], 'role': user[3]}
     return None
 
 def add_song(name, url, user_id):
@@ -196,6 +201,16 @@ def save_user_config(user_id, dark_mode, default_volume):
     finally:
         conn.close()
 
+# Decorator para rutas de admin
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_role' not in session or session['user_role'] != 'admin':
+            flash('Acceso no autorizado', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Helper decorator
 def login_required(f):
     @wraps(f)
@@ -218,10 +233,15 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         user = verify_user(username, password)
-        
         if user:
             session['user_id'] = user['id']
             session['username'] = user['username']
+            session['user_role'] = user['role']  # Guardar el rol del usuario en la sesión
+            
+            # Redirigir a panel de admin si es admin, sino a la página principal
+            if user['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            
             next_url = request.args.get('next') or url_for('index')
             return redirect(next_url)
         flash('Usuario o contraseña incorrectos', 'error')
@@ -254,7 +274,9 @@ def profile():
         email = request.form.get('email')
         current_password = request.form.get('current_password')
         new_password = request.form.get('new_password')
-          # Obtener información del usuario actual
+        repeat_password = request.form.get('repeat_password')
+
+        # Obtener información del usuario actual
         conn = sqlite3.connect('music.db')
         c = conn.cursor()
         c.execute("SELECT password, email FROM users WHERE id = ?", (session['user_id'],))
@@ -272,6 +294,11 @@ def profile():
             if current_password and new_password:
                 if not check_password_hash(current_stored_password, current_password):
                     flash('La contraseña actual es incorrecta', 'error')
+                    return redirect(url_for('profile'))
+
+                # Verificar que las contraseñas nuevas coincidan
+                if new_password != repeat_password:
+                    flash('Las contraseñas nuevas no coinciden', 'error')
                     return redirect(url_for('profile'))
                 
                 # Actualizar contraseña
@@ -329,7 +356,91 @@ def profile():
     
     return render_template('profile.html', user=user, stats=stats)
 
+@app.route('/admin')
+@login_required
+@admin_required
+def admin_dashboard():
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+    
+    # Obtener todos los usuarios
+    c.execute("""
+        SELECT id, username, email, created_at, role 
+        FROM users 
+        ORDER BY created_at DESC
+    """)
+    users = [
+        {
+            'id': row[0],
+            'username': row[1],
+            'email': row[2],
+            'created_at': row[3],
+            'role': row[4]
+        }
+        for row in c.fetchall()
+    ]
+    
+    conn.close()
+    return render_template('admin.html', users=users)
 
+@app.route('/admin/update_user', methods=['POST'])
+@login_required
+@admin_required
+def admin_update_user():
+    user_id = request.form.get('userId')
+    username = request.form.get('username')
+    email = request.form.get('email')
+    role = request.form.get('role')
+    
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+    try:
+        c.execute("""
+            UPDATE users 
+            SET username = ?, email = ?, role = ? 
+            WHERE id = ?
+        """, (username, email, role, user_id))
+        conn.commit()
+        flash('Usuario actualizado correctamente', 'success')
+    except sqlite3.IntegrityError:
+        flash('El nombre de usuario ya existe', 'error')
+    except Exception as e:
+        flash('Error al actualizar usuario', 'error')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/delete_user', methods=['POST'])
+@login_required
+@admin_required
+def admin_delete_user():
+    try:
+        data = request.get_json()
+        user_id = data.get('userId')
+        
+        conn = sqlite3.connect('music.db')
+        c = conn.cursor()
+        
+        # Verificar que no sea un admin
+        c.execute("SELECT role FROM users WHERE id = ?", (user_id,))
+        user = c.fetchone()
+        if user and user[0] == 'admin':
+            return jsonify({'success': False, 'error': 'No se puede eliminar un administrador'})
+        
+        # Eliminar primero los registros relacionados
+        c.execute("DELETE FROM favorites WHERE user_id = ?", (user_id,))
+        c.execute("DELETE FROM songs WHERE user_id = ?", (user_id,))
+        c.execute("DELETE FROM user_config WHERE user_id = ?", (user_id,))
+        c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return jsonify({'success': False, 'error': str(e)})
 
 # API Endpoints
 @app.route('/api/songs', methods=['GET'])
