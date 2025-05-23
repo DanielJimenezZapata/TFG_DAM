@@ -463,20 +463,35 @@ def play_song():
         
         if not song_url:
             return jsonify({'error': 'Canción no encontrada'}), 404
-        
         ydl_opts = {
-            'format': 'bestaudio/best',
+            'format': 'bestaudio',  # Solo busca formatos de audio
             'quiet': True,
             'extract_flat': True,
             'force_ipv4': True,
-            'socket_timeout': 10
+            'socket_timeout': 5,  # Reducir timeout a 5 segundos
+            'nocheckcertificate': True,  # Evitar chequeos de certificados
+            'prefer_insecure': True,  # Preferir conexiones más rápidas aunque sean menos seguras
+            'geo_bypass': True  # Evitar restricciones geográficas
         }
-        
+          # Primero obtener la información de la canción de nuestra base de datos
+        conn = sqlite3.connect('music.db')
+        c = conn.cursor()
+        c.execute("SELECT name, artist FROM songs WHERE id=? AND user_id=?", (song_id, session['user_id']))
+        song_info = c.fetchone()
+        conn.close()
+
+        if not song_info:
+            return jsonify({'error': 'Canción no encontrada'}), 404
+
+        song_name, artist = song_info
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(song_url, download=False)
             return jsonify({
                 'audio_stream_url': info['url'],
-                'song_id': song_id
+                'song_id': song_id,
+                'title': song_name,
+                'artist': artist
             })
     except Exception as e:
         traceback.print_exc()
@@ -542,7 +557,12 @@ def add_song_route():
         # Obtener el título del video usando yt-dlp
         ydl_opts = {
             'quiet': True,
-            'no_warnings': True
+            'no_warnings': True,
+            'extract_flat': 'in_playlist',  # Extracción más rápida de metadatos
+            'force_ipv4': True,
+            'socket_timeout': 5,
+            'nocheckcertificate': True,
+            'prefer_insecure': True
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:            
             try:
@@ -550,15 +570,35 @@ def add_song_route():
                 song_name = info.get('title', '')
                 if not song_name:
                     return jsonify({'error': 'No se pudo obtener el título del video'}), 400
+                  # Intentar obtener el artista del video de diferentes formas
+                artist = (
+                    info.get('artist', '') or           # Metadatos del artista
+                    info.get('creator', '') or          # Creador del video
+                    info.get('uploader', '') or         # Quien subió el video
+                    info.get('channel', '')             # Nombre del canal
+                )
                 
-                # Intentar obtener el artista del video
-                artist = info.get('artist', '') or info.get('uploader', '')
+                # Si no se encontró el artista, intentar extraerlo del título
+                if not artist and ' - ' in song_name:
+                    # Formatos comunes: "Artista - Canción", "Artista - Topic - Canción"
+                    parts = song_name.split(' - ')
+                    artist = parts[0].strip()
+                    # Si hay "Topic" en el nombre del artista, usar solo la primera parte
+                    if 'topic' in artist.lower():
+                        artist = artist.split('Topic')[0].strip()
+                
+                # Si aún no hay artista, intentar usar el nombre del canal sin "- Topic"
                 if not artist:
-                    # Si no hay artista, intentar extraerlo del título (formato común: "Artista - Canción")
-                    if ' - ' in song_name:
-                        artist = song_name.split(' - ')[0].strip()
-                    else:
-                        artist = info.get('channel', '') or 'Artista Desconocido'
+                    channel = info.get('channel', '')
+                    if channel:
+                        if ' - Topic' in channel:
+                            artist = channel.replace(' - Topic', '').strip()
+                        else:
+                            artist = channel
+                
+                # Si todo lo anterior falló, usar "Artista Desconocido"
+                if not artist:
+                    artist = 'Artista Desconocido'
                     
                 song_id = add_song(song_name, artist, song_url, user_id)
                 if song_id:
@@ -568,11 +608,11 @@ def add_song_route():
                         'artist': artist,
                         'url': song_url,
                         'user_id': user_id
-                    }
+                    }                    
                     return jsonify({'success': True, 'song': new_song})
+                return jsonify({'error': 'La canción ya existe'}), 400
             except Exception as e:
                 return jsonify({'error': 'Error al procesar el video: ' + str(e)}), 400
-        return jsonify({'error': 'La canción ya existe'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

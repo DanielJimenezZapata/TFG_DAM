@@ -336,23 +336,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     favoriteBtn.classList.add('active');
                 }
             });
-            
-            // Play song when card is clicked
-            songCard.addEventListener('click', () => playSong(song.id, song.name, coverUrl));
+              // Play song when card is clicked
+            songCard.addEventListener('click', () => {
+                console.log('Playing song:', { id: song.id, name: song.name, artist: song.artist });
+                playSong(song.id, song.name, coverUrl, song.artist);
+            });
             
             container.appendChild(songCard);
         });
-    }
-      function updateCurrentPlaylist() {
+    }      function updateCurrentPlaylist() {
         const activeSection = favoritesSection.style.display === 'block' ? favoritesList : songList;
-        // Obtener todas las song-cards visibles
         const songCards = Array.from(activeSection.querySelectorAll('.song-card')).filter(
             card => window.getComputedStyle(card).display !== 'none'
         );
-        
-        console.log('Actualizando playlist actual:', new Date().toISOString());
-        console.log('Sección activa:', favoritesSection.style.display === 'block' ? 'Favoritos' : 'Todas las canciones');
-        console.log('Número de canciones:', songCards.length);
         
         if (songCards.length === 0) {
             console.log('No hay canciones visibles en la sección actual');
@@ -360,23 +356,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Guardar la canción actual antes de actualizar la playlist
-        const currentSong = currentSongId ? currentPlaylist.find(song => song.id === currentSongId) : null;
-        
-        // Crear la nueva playlist manteniendo el orden de las canciones
         currentPlaylist = songCards.map(card => ({
             id: card.dataset.songId,
             name: card.querySelector('.song-title').textContent,
+            artist: card.querySelector('.song-artist').textContent,
             coverUrl: card.querySelector('.song-cover img').src
         }));
-
-        // Actualizar isPlayingFavorites basado en la sección actual
+        
         isPlayingFavorites = favoritesSection.style.display === 'block';
-        
-        console.log('Nueva playlist:', currentPlaylist.map(song => song.name));
-        console.log('Reproduciendo en favoritos:', isPlayingFavorites);
-        console.log('Canción actual ID:', currentSongId);
-        
         return currentPlaylist;
     }    function playNextSong() {
         console.log('playNextSong llamado');
@@ -418,16 +405,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Detener la reproducción actual antes de comenzar la siguiente
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
-        
-        // Reproducir la siguiente canción
-        playSong(nextSong.id, nextSong.name, nextSong.coverUrl);
-    }    function playSong(songId, songName, coverUrl) {
-        console.log('Intentando reproducir:', songName);
-          // Actualizar currentSongId y UI inmediatamente
-        const currentSong = currentPlaylist.find(s => s.id === songId);
+          // Reproducir la siguiente canción
+        playSong(nextSong.id, nextSong.name, nextSong.coverUrl, nextSong.artist);
+    }    function playSong(songId, songName, coverUrl, artist) {
+        console.log('Intentando reproducir:', songName, 'por', artist);
         currentSongId = songId;
         nowPlayingTitle.textContent = songName;
-        nowPlayingArtist.textContent = currentSong ? currentSong.artist || 'Artista Desconocido' : 'Artista Desconocido';
+        // Solo usar 'Artista Desconocido' si no hay información del artista
+        nowPlayingArtist.textContent = artist || '';
         nowPlayingCover.src = coverUrl;
         
         fetch('/api/play', {
@@ -438,22 +423,24 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ song_id: songId })
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Error al reproducir la canción');
-            }
+            if (!response.ok) throw new Error('Error al reproducir la canción');
             return response.json();
         })
         .then(data => {
             if (data.audio_stream_url) {
+                // Actualizar el título y el artista con la información de la base de datos
+                if (data.title) nowPlayingTitle.textContent = data.title;
+                // Priorizar el artista de la base de datos
+                nowPlayingArtist.textContent = data.artist || artist || 'Artista Desconocido';
+                
                 audioPlayer.src = data.audio_stream_url;
-                audioPlayer.currentTime = 0; // Asegurar que empezamos desde el principio
+                audioPlayer.currentTime = 0;
                 return audioPlayer.play();
             } else if (data.fallback_url) {
                 window.open(data.fallback_url, '_blank');
             }
         })
         .then(() => {
-            console.log('Reproduciendo:', songName);
             updateFavoriteButton(songId);
         })
         .catch(error => {
@@ -854,9 +841,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Detener la reproducción actual antes de comenzar la anterior
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
-        
-        // Reproducir la canción anterior
-        playSong(prevSong.id, prevSong.name, prevSong.coverUrl);
+          // Reproducir la canción anterior
+        playSong(prevSong.id, prevSong.name, prevSong.coverUrl, prevSong.artist);
     }
     
     // Theme-aware styles for player elements
