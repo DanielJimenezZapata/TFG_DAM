@@ -25,6 +25,18 @@ def init_db():
         role TEXT DEFAULT 'user',
         created_at DATETIME
     )''')
+    
+    # Verificar si el usuario admin existe
+    c.execute("SELECT username FROM users WHERE username = 'admin'")
+    admin_exists = c.fetchone()
+    
+    # Si no existe el admin, crearlo
+    if not admin_exists:
+        from datetime import datetime
+        admin_password = generate_password_hash('admin123')
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        c.execute("INSERT INTO users (username, password, role, created_at) VALUES (?, ?, 'admin', ?)",
+                 ('admin', admin_password, current_time))
 
     # Verificar si existe la columna role
     c.execute("PRAGMA table_info(users)")
