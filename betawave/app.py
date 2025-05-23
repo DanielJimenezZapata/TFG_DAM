@@ -524,28 +524,41 @@ def delete_song_route():
 
 @app.route('/api/add_song', methods=['POST'])
 @login_required
-def add_song_route():
+def add_song_route():    
     try:
         data = request.json
-        song_name = data.get('song_name')
         song_url = data.get('song_url')
         user_id = session['user_id']
         
-        if not song_name or not song_url:
-            return jsonify({'error': 'Nombre y URL son requeridos'}), 400
+        if not song_url:
+            return jsonify({'error': 'URL es requerida'}), 400
         
         if 'youtube.com' not in song_url and 'youtu.be' not in song_url:
             return jsonify({'error': 'Solo se aceptan URLs de YouTube'}), 400
             
-        song_id = add_song(song_name, song_url, user_id)
-        if song_id:
-            new_song = {
-                'id': song_id,
-                'name': song_name,
-                'url': song_url,
-                'user_id': user_id
-            }
-            return jsonify({'success': True, 'song': new_song})
+        # Obtener el título del video usando yt-dlp
+        ydl_opts = {
+            'quiet': True,
+            'no_warnings': True
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                info = ydl.extract_info(song_url, download=False)
+                song_name = info.get('title', '')
+                if not song_name:
+                    return jsonify({'error': 'No se pudo obtener el título del video'}), 400
+                    
+                song_id = add_song(song_name, song_url, user_id)
+                if song_id:
+                    new_song = {
+                        'id': song_id,
+                        'name': song_name,
+                        'url': song_url,
+                        'user_id': user_id
+                    }
+                    return jsonify({'success': True, 'song': new_song})
+            except Exception as e:
+                return jsonify({'error': 'Error al procesar el video: ' + str(e)}), 400
         return jsonify({'error': 'La canción ya existe'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -465,14 +465,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 showAlert('Error: ' + (error.message || 'No se pudo reproducir la canción'), 'error');
             }
         });
-    }
-    
-    function addSong() {
-        const songName = document.getElementById('song-name').value;
+    }    function addSong() {
         const songUrl = document.getElementById('song-url').value;
         
-        if (!songName || !songUrl) {
-            showAlert('Por favor ingresa nombre y URL de la canción', 'error');
+        if (!songUrl) {
+            showAlert('Por favor ingresa la URL de la canción', 'error');
             return;
         }
         
@@ -482,30 +479,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        showAlert('Procesando la canción...', 'info');
+        
         fetch('/api/add_song', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                song_name: songName,
                 song_url: songUrl
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        .then(response => response.json().then(data => ({
+            ok: response.ok,
+            status: response.status,
+            data: data
+        })))
+        .then(({ok, status, data}) => {
+            if (ok && data.success) {
                 showAlert('Canción añadida correctamente!', 'success');
-                document.getElementById('song-name').value = '';
                 document.getElementById('song-url').value = '';
                 loadSongs();
             } else {
-                showAlert('Error: ' + (data.error || 'No se pudo añadir la canción'), 'error');
+                throw new Error(data.error || 'No se pudo añadir la canción');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showAlert('Error al conectar con el servidor', 'error');
+            showAlert(error.message || 'Error al conectar con el servidor', 'error');
         });
     }
     
