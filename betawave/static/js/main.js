@@ -516,20 +516,14 @@ document.addEventListener('DOMContentLoaded', function() {
             currentSongId = null;
             updateFavoriteButton(null);
         }
-        
-        fetch('/api/delete', {
+          fetch('/api/delete', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ song_id: songId })
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             if (data.success) {
                 showAlert('Canción eliminada correctamente', 'success');
@@ -545,14 +539,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             updateCurrentPlaylist();
                         }, 100);
                     }, 100);
-                }, 100);
-            } else {
-                throw new Error(data.error || 'No se pudo eliminar la canción');
+                }, 100);            } else {
+                showAlert(data.error || 'No se pudo eliminar la canción', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showAlert(error.message, 'error');
+            showAlert('Error al intentar eliminar la canción', 'error');
         });
     }
     

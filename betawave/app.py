@@ -144,12 +144,25 @@ def get_song_url(song_id, user_id):
 def delete_song(song_id, user_id):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    c.execute("DELETE FROM songs WHERE id=? AND user_id=?", (song_id, user_id))
-    c.execute("DELETE FROM favorites WHERE song_id=?", (song_id,))
-    conn.commit()
-    rows_affected = c.rowcount
-    conn.close()
-    return rows_affected > 0
+    try:
+        # Primero verificar que la canción existe y pertenece al usuario
+        c.execute("SELECT 1 FROM songs WHERE id=? AND user_id=?", (song_id, user_id))
+        if not c.fetchone():
+            return False
+            
+        # Eliminar primero las referencias en favoritos
+        c.execute("DELETE FROM favorites WHERE song_id=?", (song_id,))
+        
+        # Luego eliminar la canción
+        c.execute("DELETE FROM songs WHERE id=? AND user_id=?", (song_id, user_id))
+        
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return False
+    finally:
+        conn.close()
 
 def add_favorite(user_id, song_id):
     conn = sqlite3.connect('music.db')
@@ -534,11 +547,16 @@ def download_song():
 def delete_song_route():
     try:
         data = request.json
-        if delete_song(data.get('song_id'), session['user_id']):
+        if not data or 'song_id' not in data:
+            return jsonify({'success': False, 'error': 'ID de canción no proporcionado'}), 400
+            
+        song_id = data.get('song_id')
+        if delete_song(song_id, session['user_id']):
             return jsonify({'success': True})
-        return jsonify({'error': 'Canción no encontrada'}), 404
+        return jsonify({'success': False, 'error': 'Canción no encontrada o no tienes permiso para eliminarla'}), 404
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error deleting song: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error al eliminar la canción'}), 500
 
 @app.route('/api/add_song', methods=['POST'])
 @login_required
