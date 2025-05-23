@@ -40,20 +40,22 @@ def init_db():
 
     # Verificar si existe la columna role
     c.execute("PRAGMA table_info(users)")
-    columns = [column[1] for column in c.fetchall()]
+    columns = [column[1] for column in c.fetchall()]    
     if 'role' not in columns:
-        c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
-
+        c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")    
+    
     # Verificar si existe la columna created_at
     if 'created_at' not in columns:
         c.execute("ALTER TABLE users ADD COLUMN created_at DATETIME")
         from datetime import datetime
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         c.execute("UPDATE users SET created_at = ? WHERE created_at IS NULL", (current_time,))
-    
+
+    # Crear tabla songs si no existe
     c.execute('''CREATE TABLE IF NOT EXISTS songs
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   name TEXT NOT NULL,
+                  artist TEXT,
                   url TEXT NOT NULL,
                   user_id INTEGER NOT NULL,
                   FOREIGN KEY(user_id) REFERENCES users(id))''')
@@ -100,12 +102,12 @@ def verify_user(username, password):
         return {'id': user[0], 'username': user[1], 'role': user[3]}
     return None
 
-def add_song(name, url, user_id):
+def add_song(name, artist, url, user_id):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
     try:
-        c.execute("INSERT INTO songs (name, url, user_id) VALUES (?, ?, ?)",
-                 (name, url, user_id))
+        c.execute("INSERT INTO songs (name, artist, url, user_id) VALUES (?, ?, ?, ?)",
+                 (name, artist, url, user_id))
         conn.commit()
         return c.lastrowid
     except sqlite3.IntegrityError:
@@ -116,17 +118,18 @@ def add_song(name, url, user_id):
 def get_songs(user_id):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    c.execute("SELECT id, name, url FROM songs WHERE user_id=?", (user_id,))
-    songs = [{'id': row[0], 'name': row[1], 'url': row[2]} for row in c.fetchall()]
+    c.execute("SELECT id, name, artist, url FROM songs WHERE user_id=?", (user_id,))
+    songs = [{'id': row[0], 'name': row[1], 'artist': row[2], 'url': row[3]} for row in c.fetchall()]
     conn.close()
     return songs
 
 def search_songs(user_id, search_term):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    c.execute("SELECT id, name, url FROM songs WHERE user_id=? AND LOWER(name) LIKE ?", 
-             (user_id, f'%{search_term.lower()}%'))
-    songs = [{'id': row[0], 'name': row[1], 'url': row[2]} for row in c.fetchall()]
+    c.execute("""SELECT id, name, artist, url FROM songs 
+                 WHERE user_id=? AND (LOWER(name) LIKE ? OR LOWER(artist) LIKE ?)""", 
+             (user_id, f'%{search_term.lower()}%', f'%{search_term.lower()}%'))
+    songs = [{'id': row[0], 'name': row[1], 'artist': row[2], 'url': row[3]} for row in c.fetchall()]
     conn.close()
     return songs
 
@@ -172,10 +175,10 @@ def remove_favorite(user_id, song_id):
 def get_favorites(user_id):
     conn = sqlite3.connect('music.db')
     c = conn.cursor()
-    c.execute('''SELECT s.id, s.name, s.url 
+    c.execute('''SELECT s.id, s.name, s.artist, s.url 
                  FROM songs s JOIN favorites f ON s.id = f.song_id 
                  WHERE f.user_id=?''', (user_id,))
-    favorites = [{'id': row[0], 'name': row[1], 'url': row[2]} for row in c.fetchall()]
+    favorites = [{'id': row[0], 'name': row[1], 'artist': row[2], 'url': row[3]} for row in c.fetchall()]
     conn.close()
     return favorites
 
@@ -541,18 +544,28 @@ def add_song_route():
             'quiet': True,
             'no_warnings': True
         }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:            
             try:
                 info = ydl.extract_info(song_url, download=False)
                 song_name = info.get('title', '')
                 if not song_name:
                     return jsonify({'error': 'No se pudo obtener el título del video'}), 400
+                
+                # Intentar obtener el artista del video
+                artist = info.get('artist', '') or info.get('uploader', '')
+                if not artist:
+                    # Si no hay artista, intentar extraerlo del título (formato común: "Artista - Canción")
+                    if ' - ' in song_name:
+                        artist = song_name.split(' - ')[0].strip()
+                    else:
+                        artist = info.get('channel', '') or 'Artista Desconocido'
                     
-                song_id = add_song(song_name, song_url, user_id)
+                song_id = add_song(song_name, artist, song_url, user_id)
                 if song_id:
                     new_song = {
                         'id': song_id,
                         'name': song_name,
+                        'artist': artist,
                         'url': song_url,
                         'user_id': user_id
                     }

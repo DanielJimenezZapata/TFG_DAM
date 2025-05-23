@@ -290,9 +290,8 @@ document.addEventListener('DOMContentLoaded', function() {
             songCard.innerHTML = `
                 <div class="song-cover">
                     <img src="${coverUrl}" alt="Portada de canción">
-                </div>
-                <div class="song-title">${song.name}</div>
-                <div class="song-artist">${document.querySelector('.username').textContent}</div>
+                </div>                <div class="song-title">${song.name}</div>
+                <div class="song-artist">${song.artist || 'Artista Desconocido'}</div>
                 <div class="song-actions">
                     <button class="song-action-btn favorite-btn" data-song-id="${song.id}">
                         <i class="far fa-heart"></i>
@@ -424,11 +423,11 @@ document.addEventListener('DOMContentLoaded', function() {
         playSong(nextSong.id, nextSong.name, nextSong.coverUrl);
     }    function playSong(songId, songName, coverUrl) {
         console.log('Intentando reproducir:', songName);
-        
-        // Actualizar currentSongId y UI inmediatamente
+          // Actualizar currentSongId y UI inmediatamente
+        const currentSong = currentPlaylist.find(s => s.id === songId);
         currentSongId = songId;
         nowPlayingTitle.textContent = songName;
-        nowPlayingArtist.textContent = document.querySelector('.username').textContent;
+        nowPlayingArtist.textContent = currentSong ? currentSong.artist || 'Artista Desconocido' : 'Artista Desconocido';
         nowPlayingCover.src = coverUrl;
         
         fetch('/api/play', {
