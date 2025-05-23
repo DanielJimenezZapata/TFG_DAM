@@ -506,6 +506,17 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Primero detener la reproducción si es la canción actual
+        if (currentSongId === songId) {
+            audioPlayer.pause();
+            audioPlayer.src = '';
+            nowPlayingTitle.textContent = 'No hay canción seleccionada';
+            nowPlayingCover.src = 'https://via.placeholder.com/60';
+            nowPlayingArtist.textContent = '';
+            currentSongId = null;
+            updateFavoriteButton(null);
+        }
+        
         fetch('/api/delete', {
             method: 'POST',
             headers: {
@@ -513,29 +524,35 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ song_id: songId })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 showAlert('Canción eliminada correctamente', 'success');
-                loadSongs();
-                loadFavorites();
                 
-                // If deleted song is currently playing, stop it
-                if (currentSongId === songId) {
-                    audioPlayer.pause();
-                    audioPlayer.src = '';
-                    nowPlayingTitle.textContent = 'No hay canción seleccionada';
-                    nowPlayingCover.src = 'https://via.placeholder.com/60';
-                    currentSongId = null;
-                    updateFavoriteButton(null);
-                }
+                // Esperar un momento antes de actualizar las listas
+                setTimeout(() => {
+                    loadSongs();
+                    // Después de cargar las canciones, cargar los favoritos
+                    setTimeout(() => {
+                        loadFavorites();
+                        // Actualizar la playlist actual
+                        setTimeout(() => {
+                            updateCurrentPlaylist();
+                        }, 100);
+                    }, 100);
+                }, 100);
             } else {
-                showAlert('Error al eliminar la canción', 'error');
+                throw new Error(data.error || 'No se pudo eliminar la canción');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showAlert('Error al eliminar la canción', 'error');
+            showAlert(error.message, 'error');
         });
     }
     
