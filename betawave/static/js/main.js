@@ -500,23 +500,54 @@ document.addEventListener('DOMContentLoaded', function() {
         const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
         return pattern.test(url);
     }
-    
-    function deleteSong(songId) {
+      function deleteSong(songId) {
         if (!confirm('¿Estás seguro de que quieres eliminar esta canción?')) {
             return;
         }
-        
-        // Primero detener la reproducción si es la canción actual
-        if (currentSongId === songId) {
-            audioPlayer.pause();
-            audioPlayer.src = '';
-            nowPlayingTitle.textContent = 'No hay canción seleccionada';
-            nowPlayingCover.src = 'https://via.placeholder.com/60';
-            nowPlayingArtist.textContent = '';
-            currentSongId = null;
-            updateFavoriteButton(null);
-        }
-          fetch('/api/delete', {
+
+        // Variable global para que el listener de errores pueda acceder a ella
+        window.deletionInProgress = true;
+        const wasPlaying = currentSongId === songId && !audioPlayer.paused;
+
+        // Clean up player state before deletion
+        const cleanupPlayer = () => {
+            if (currentSongId === songId) {
+                audioPlayer.pause();
+                audioPlayer.src = '';
+                nowPlayingTitle.textContent = 'No hay canción seleccionada';
+                nowPlayingCover.src = 'https://via.placeholder.com/60';
+                nowPlayingArtist.textContent = '';
+                currentSongId = null;
+                updateFavoriteButton(null);
+            }
+        };
+
+        // Update UI state after deletion
+        const updateUIState = async () => {
+            await loadSongs();
+            await loadFavorites();
+            await updateCurrentPlaylist();
+            
+            if (wasPlaying) {
+                // Only try to play next song if deletion was successful
+                playNextSong();
+            }
+        };
+
+        // Prevent any playback errors from showing during deletion
+        const originalErrorHandler = audioPlayer.onerror;
+        audioPlayer.onerror = (e) => {
+            if (deletionInProgress) {
+                console.log('Suppressing playback error during deletion');
+                return;
+            }
+            originalErrorHandler?.call(audioPlayer, e);
+        };
+
+        deletionInProgress = true;
+        cleanupPlayer();
+
+        fetch('/api/delete', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -524,28 +555,20 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ song_id: songId })
         })
         .then(response => response.json())
-        .then(data => {
+        .then(async data => {
             if (data.success) {
                 showAlert('Canción eliminada correctamente', 'success');
-                
-                // Esperar un momento antes de actualizar las listas
-                setTimeout(() => {
-                    loadSongs();
-                    // Después de cargar las canciones, cargar los favoritos
-                    setTimeout(() => {
-                        loadFavorites();
-                        // Actualizar la playlist actual
-                        setTimeout(() => {
-                            updateCurrentPlaylist();
-                        }, 100);
-                    }, 100);
-                }, 100);            } else {
+                await updateUIState();
+            } else {
                 showAlert(data.error || 'No se pudo eliminar la canción', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
             showAlert('Error al intentar eliminar la canción', 'error');
+        })        .finally(() => {
+            window.deletionInProgress = false;
+            audioPlayer.onerror = originalErrorHandler;
         });
     }
     
@@ -756,10 +779,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (audioPlayer.currentTime >= audioPlayer.duration) {
             playNextSong();
         }
-    });
-
-    // Event listener para errores de reproducción
+    });    // Event listener para errores de reproducción
     audioPlayer.addEventListener('error', (e) => {
+        // No mostrar errores si estamos en proceso de eliminación
+        if (window.deletionInProgress) {
+            console.log('Ignorando error de reproducción durante eliminación');
+            return;
+        }
         console.error('Error en la reproducción:', e);
         showAlert('Error al reproducir la canción', 'error');
         // Si hay un error, también pasamos a la siguiente
