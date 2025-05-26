@@ -14,71 +14,97 @@ app.config['STATIC_FOLDER'] = 'static'
 # Database Functions
 def init_db():
     db_path = app.config.get('DATABASE', 'music.db')
+    print(f"\n[init_db] Initializing database at: {db_path}")
+    
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
-    # Crear tabla users si no existe
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        email TEXT,
-        role TEXT DEFAULT 'user',
-        created_at DATETIME
-    )''')
-    
-    # Verificar si el usuario admin existe
-    c.execute("SELECT username FROM users WHERE username = 'admin'")
-    admin_exists = c.fetchone()
-    
-    # Si no existe el admin, crearlo
-    if not admin_exists:
-        from datetime import datetime
-        admin_password = generate_password_hash('admin123')
-        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        c.execute("INSERT INTO users (username, password, role, created_at) VALUES (?, ?, 'admin', ?)",
-                 ('admin', admin_password, current_time))
+    try:
+        # Crear tabla users si no existe
+        print("[init_db] Creating users table...")
+        c.execute('''CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            email TEXT,
+            role TEXT DEFAULT 'user',
+            created_at DATETIME
+        )''')
+        
+        # Verificar si el usuario admin existe
+        c.execute("SELECT username FROM users WHERE username = 'admin'")
+        admin_exists = c.fetchone()
+        print(f"[init_db] Admin exists: {admin_exists is not None}")
+        
+        # Si no existe el admin, crearlo
+        if not admin_exists:
+            from datetime import datetime
+            admin_password = generate_password_hash('admin123')
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print("[init_db] Creating admin user...")
+            c.execute("INSERT INTO users (username, password, role, created_at) VALUES (?, ?, 'admin', ?)",
+                     ('admin', admin_password, current_time))
 
-    # Verificar si existe la columna role
-    c.execute("PRAGMA table_info(users)")
-    columns = [column[1] for column in c.fetchall()]    
-    if 'role' not in columns:
-        c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")    
-    
-    # Verificar si existe la columna created_at
-    if 'created_at' not in columns:
-        c.execute("ALTER TABLE users ADD COLUMN created_at DATETIME")
-        from datetime import datetime
-        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        c.execute("UPDATE users SET created_at = ? WHERE created_at IS NULL", (current_time,))
+        # Verificar si existe la columna role
+        c.execute("PRAGMA table_info(users)")
+        columns = [column[1] for column in c.fetchall()]    
+        print(f"[init_db] Users table columns: {columns}")
+        
+        if 'role' not in columns:
+            print("[init_db] Adding role column...")
+            c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")    
+        
+        # Verificar si existe la columna created_at
+        if 'created_at' not in columns:
+            print("[init_db] Adding created_at column...")
+            c.execute("ALTER TABLE users ADD COLUMN created_at DATETIME")
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            c.execute("UPDATE users SET created_at = ? WHERE created_at IS NULL", (current_time,))
 
-    # Crear tabla songs si no existe
-    c.execute('''CREATE TABLE IF NOT EXISTS songs
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  name TEXT NOT NULL,
-                  artist TEXT,
-                  url TEXT NOT NULL,
-                  user_id INTEGER NOT NULL,
-                  FOREIGN KEY(user_id) REFERENCES users(id))''')
-    
-    c.execute('''CREATE TABLE IF NOT EXISTS favorites
-                 (user_id INTEGER NOT NULL,
-                  song_id INTEGER NOT NULL,
-                  PRIMARY KEY (user_id, song_id),
-                  FOREIGN KEY(user_id) REFERENCES users(id),
-                  FOREIGN KEY(song_id) REFERENCES songs(id))''')
-    
-    c.execute('''CREATE TABLE IF NOT EXISTS user_config
-                 (user_id INTEGER PRIMARY KEY,
-                  dark_mode BOOLEAN DEFAULT 0,
-                  default_volume INTEGER DEFAULT 50,
-                  FOREIGN KEY(user_id) REFERENCES users(id))''')
-    
-    conn.commit()
-    conn.close()
+        # Crear tabla songs si no existe
+        print("[init_db] Creating songs table...")
+        c.execute('''CREATE TABLE IF NOT EXISTS songs
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      name TEXT NOT NULL,
+                      artist TEXT,
+                      url TEXT NOT NULL,
+                      user_id INTEGER NOT NULL,
+                      FOREIGN KEY(user_id) REFERENCES users(id))''')
+        
+        print("[init_db] Creating favorites table...")
+        c.execute('''CREATE TABLE IF NOT EXISTS favorites
+                     (user_id INTEGER NOT NULL,
+                      song_id INTEGER NOT NULL,
+                      PRIMARY KEY (user_id, song_id),
+                      FOREIGN KEY(user_id) REFERENCES users(id),
+                      FOREIGN KEY(song_id) REFERENCES songs(id))''')
+        
+        print("[init_db] Creating user_config table...")
+        c.execute('''CREATE TABLE IF NOT EXISTS user_config
+                     (user_id INTEGER PRIMARY KEY,
+                      dark_mode BOOLEAN DEFAULT 0,
+                      default_volume INTEGER DEFAULT 50,
+                      FOREIGN KEY(user_id) REFERENCES users(id))''')
+        
+        conn.commit()
+        print("[init_db] Database initialization complete!")
+        
+        # Verify tables were created
+        c.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = c.fetchall()
+        print(f"[init_db] Tables in database: {[t[0] for t in tables]}")
+        
+    except sqlite3.Error as e:
+        print(f"[init_db] SQLite error: {e}")
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 def add_user(username, password, email=None, role='user'):
+    print(f"[add_user] Adding user: username={username}, email={email}, role={role}")
     db_path = app.config.get('DATABASE', 'music.db')
+    print(f"[add_user] Using database: {db_path}")
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     try:
@@ -88,8 +114,13 @@ def add_user(username, password, email=None, role='user'):
         c.execute("INSERT INTO users (username, password, email, role, created_at) VALUES (?, ?, ?, ?, ?)",
                  (username, hashed_pw, email, role, current_time))
         conn.commit()
+        print("[add_user] User added successfully")
         return True
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as e:
+        print(f"[add_user] SQLite Integrity Error: {e}")
+        return False
+    except sqlite3.Error as e:
+        print(f"[add_user] SQLite Error: {e}")
         return False
     finally:
         conn.close()
@@ -129,17 +160,38 @@ def get_songs(user_id):
     return songs
 
 def search_songs(user_id, search_term):
-    conn = sqlite3.connect('music.db')
+    """
+    Busca canciones por nombre o artista
+    """
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    c.execute("""SELECT id, name, artist, url FROM songs 
-                 WHERE user_id=? AND (LOWER(name) LIKE ? OR LOWER(artist) LIKE ?)""", 
-             (user_id, f'%{search_term.lower()}%', f'%{search_term.lower()}%'))
-    songs = [{'id': row[0], 'name': row[1], 'artist': row[2], 'url': row[3]} for row in c.fetchall()]
-    conn.close()
-    return songs
+    try:
+        c.execute("""
+            SELECT id, name, artist, url 
+            FROM songs 
+            WHERE user_id = ? AND (
+                LOWER(name) LIKE ? OR 
+                LOWER(artist) LIKE ?
+            )
+        """, (user_id, f'%{search_term.lower()}%', f'%{search_term.lower()}%'))
+        
+        songs = [
+            {
+                'id': row[0],
+                'name': row[1],
+                'artist': row[2],
+                'url': row[3]
+            }
+            for row in c.fetchall()
+        ]
+        return songs
+    finally:
+        conn.close()
 
 def get_song_url(song_id, user_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("SELECT url FROM songs WHERE id=? AND user_id=?", (song_id, user_id))
     result = c.fetchone()
@@ -233,7 +285,8 @@ def is_favorite(user_id, song_id):
     return result
 
 def get_user_config(user_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("SELECT dark_mode, default_volume FROM user_config WHERE user_id=?", (user_id,))
     config = c.fetchone()
@@ -245,7 +298,8 @@ def get_user_config(user_id):
     return {'dark_mode': bool(config[0]), 'default_volume': config[1]}
 
 def save_user_config(user_id, dark_mode, default_volume):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     try:
         c.execute("""INSERT OR REPLACE INTO user_config (user_id, dark_mode, default_volume) 
@@ -331,10 +385,9 @@ def profile():
         email = request.form.get('email')
         current_password = request.form.get('current_password')
         new_password = request.form.get('new_password')
-        repeat_password = request.form.get('repeat_password')
-
-        # Obtener información del usuario actual
-        conn = sqlite3.connect('music.db')
+        repeat_password = request.form.get('repeat_password')        # Obtener información del usuario actual
+        db_path = app.config.get('DATABASE', 'music.db')
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("SELECT password, email FROM users WHERE id = ?", (session['user_id'],))
         user_data = c.fetchone()
@@ -376,9 +429,10 @@ def profile():
         return redirect(url_for('profile'))
     
     # Obtener información del usuario y estadísticas
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
-      # Obtener datos del usuario
+    # Obtener datos del usuario
     c.execute("SELECT username, email FROM users WHERE id = ?", (session['user_id'],))
     user_data = c.fetchone()
     if not user_data:
@@ -417,7 +471,8 @@ def profile():
 @login_required
 @admin_required
 def admin_dashboard():
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
     # Obtener todos los usuarios
@@ -450,7 +505,8 @@ def admin_delete_user():
         data = request.get_json()
         user_id = data.get('userId')
         
-        conn = sqlite3.connect('music.db')
+        db_path = app.config.get('DATABASE', 'music.db')
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         
         # Verificar que no sea un admin
@@ -514,9 +570,9 @@ def play_song():
             'nocheckcertificate': True,  # Evitar chequeos de certificados
             'prefer_insecure': True,  # Preferir conexiones más rápidas aunque sean menos seguras
             'geo_bypass': True  # Evitar restricciones geográficas
-        }
-          # Primero obtener la información de la canción de nuestra base de datos
-        conn = sqlite3.connect('music.db')
+        }          # Primero obtener la información de la canción de nuestra base de datos
+        db_path = app.config.get('DATABASE', 'music.db')
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("SELECT name, artist FROM songs WHERE id=? AND user_id=?", (song_id, session['user_id']))
         song_info = c.fetchone()
