@@ -129,3 +129,27 @@ def is_favorite(user_id, song_id):
     result = c.fetchone() is not None
     conn.close()
     return result
+
+def delete_user(user_id):
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+    try:
+        # Delete user's favorites
+        c.execute("DELETE FROM favorites WHERE user_id=?", (user_id,))
+        
+        # Delete user's songs
+        c.execute("DELETE FROM songs WHERE user_id=?", (user_id,))
+        
+        # Delete user's config
+        c.execute("DELETE FROM user_config WHERE user_id=?", (user_id,))
+        
+        # Delete the user
+        c.execute("DELETE FROM users WHERE id=?", (user_id,))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return False
+    finally:
+        conn.close()

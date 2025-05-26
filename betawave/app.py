@@ -698,6 +698,37 @@ def save_config():
         print(f"Error saving config: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/delete_account', methods=['POST'])
+def delete_account():
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión primero.', 'error')
+        return redirect(url_for('login'))
+
+    from DDBB import delete_user
+    
+    # Get the current password from the form
+    current_password = request.form.get('current_password')
+    
+    # Verify the password before deletion
+    conn = sqlite3.connect('music.db')
+    c = conn.cursor()
+    c.execute("SELECT password FROM users WHERE id=?", (session['user_id'],))
+    user = c.fetchone()
+    conn.close()
+
+    if not user or not check_password_hash(user[0], current_password):
+        flash('Contraseña incorrecta. Por favor, inténtalo de nuevo.', 'error')
+        return redirect(url_for('profile'))
+
+    # Delete the account
+    if delete_user(session['user_id']):
+        session.clear()
+        flash('Tu cuenta ha sido eliminada correctamente.', 'success')
+        return redirect(url_for('login'))
+    else:
+        flash('Ha ocurrido un error al eliminar la cuenta. Por favor, inténtalo de nuevo.', 'error')
+        return redirect(url_for('profile'))
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, host="0.0.0.0", port=8501)
