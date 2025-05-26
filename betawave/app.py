@@ -13,7 +13,8 @@ app.config['STATIC_FOLDER'] = 'static'
 
 # Database Functions
 def init_db():
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
     # Crear tabla users si no existe
@@ -77,7 +78,8 @@ def init_db():
     conn.close()
 
 def add_user(username, password, email=None, role='user'):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     try:
         from datetime import datetime
@@ -93,7 +95,8 @@ def add_user(username, password, email=None, role='user'):
         conn.close()
 
 def verify_user(username, password):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("SELECT id, username, password, role FROM users WHERE username=?", (username,))
     user = c.fetchone()
@@ -103,7 +106,8 @@ def verify_user(username, password):
     return None
 
 def add_song(name, artist, url, user_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     try:
         c.execute("INSERT INTO songs (name, artist, url, user_id) VALUES (?, ?, ?, ?)",
@@ -116,7 +120,8 @@ def add_song(name, artist, url, user_id):
         conn.close()
 
 def get_songs(user_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("SELECT id, name, artist, url FROM songs WHERE user_id=?", (user_id,))
     songs = [{'id': row[0], 'name': row[1], 'artist': row[2], 'url': row[3]} for row in c.fetchall()]
@@ -142,7 +147,8 @@ def get_song_url(song_id, user_id):
     return result[0] if result else None
 
 def delete_song(song_id, user_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     try:
         # Primero verificar que la canción existe y pertenece al usuario
@@ -165,19 +171,33 @@ def delete_song(song_id, user_id):
         conn.close()
 
 def add_favorite(user_id, song_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    print(f"[add_favorite] Adding to favorites in database: {db_path}")
+    print(f"[add_favorite] user_id: {user_id}, song_id: {song_id}")
+    
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     try:
+        # First check if the favorite already exists
+        c.execute("SELECT 1 FROM favorites WHERE user_id=? AND song_id=?", (user_id, song_id))
+        if c.fetchone() is not None:
+            print("[add_favorite] Favorite already exists")
+            return True
+
+        # Add the favorite
         c.execute("INSERT INTO favorites VALUES (?, ?)", (user_id, song_id))
         conn.commit()
+        print("[add_favorite] Successfully added favorite")
         return True
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as e:
+        print(f"[add_favorite] SQL error: {e}")
         return False
     finally:
         conn.close()
 
 def remove_favorite(user_id, song_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("DELETE FROM favorites WHERE user_id=? AND song_id=?", (user_id, song_id))
     conn.commit()
@@ -186,7 +206,8 @@ def remove_favorite(user_id, song_id):
     return rows_affected > 0
 
 def get_favorites(user_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''SELECT s.id, s.name, s.artist, s.url 
                  FROM songs s JOIN favorites f ON s.id = f.song_id 
@@ -196,10 +217,18 @@ def get_favorites(user_id):
     return favorites
 
 def is_favorite(user_id, song_id):
-    conn = sqlite3.connect('music.db')
+    db_path = app.config.get('DATABASE', 'music.db')
+    print(f"[is_favorite] Checking favorites in database: {db_path}")
+    print(f"[is_favorite] user_id: {user_id}, song_id: {song_id}")
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("SELECT 1 FROM favorites WHERE user_id=? AND song_id=?", (user_id, song_id))
     result = c.fetchone() is not None
+    print(f"[is_favorite] Found in favorites: {result}")
+    # Debug: check actual records
+    c.execute("SELECT * FROM favorites")
+    all_favs = c.fetchall()
+    print(f"[is_favorite] All favorites in DB: {all_favs}")
     conn.close()
     return result
 
@@ -648,17 +677,49 @@ def get_favorites_route():
 def toggle_favorite():
     try:
         data = request.json
+        if not data or 'song_id' not in data:
+            print("[toggle_favorite] No song_id in request")
+            return jsonify({'error': 'song_id es requerido'}), 400
+            
         song_id = data.get('song_id')
         user_id = session['user_id']
+        print(f"[toggle_favorite] song_id: {song_id}, user_id: {user_id}")
         
-        if is_favorite(user_id, song_id):
-            remove_favorite(user_id, song_id)
-            return jsonify({'is_favorite': False})
-        else:
-            if add_favorite(user_id, song_id):
-                return jsonify({'is_favorite': True})
+        # First verify the song exists
+        db_path = app.config.get('DATABASE', 'music.db')
+        print(f"[toggle_favorite] Using database: {db_path}")
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute("SELECT 1 FROM songs WHERE id=?", (song_id,))
+        song_exists = c.fetchone() is not None
+        conn.close()
+        
+        if not song_exists:
+            print("[toggle_favorite] Song not found")
             return jsonify({'error': 'Canción no encontrada'}), 404
+        
+        print("[toggle_favorite] Song exists, checking current favorite status")
+        # Check current favorite status
+        current_status = is_favorite(user_id, song_id)
+        print(f"[toggle_favorite] Current favorite status: {current_status}")
+        
+        # Toggle the status
+        if current_status:
+            print("[toggle_favorite] Removing from favorites")
+            success = remove_favorite(user_id, song_id)
+        else:
+            print("[toggle_favorite] Adding to favorites")
+            success = add_favorite(user_id, song_id)
+            
+        if not success:
+            print("[toggle_favorite] Error updating favorites")
+            return jsonify({'error': 'Error al actualizar favoritos'}), 500
+            
+        new_status = not current_status
+        print(f"[toggle_favorite] Operation successful, new status: {new_status}")
+        return jsonify({'is_favorite': new_status})
     except Exception as e:
+        print(f"[toggle_favorite] Error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/is_favorite', methods=['POST'])
