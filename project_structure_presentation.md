@@ -2,7 +2,15 @@
 graph TB
     subgraph "Estructura del Proyecto Betawave"
         direction TB
+        
+        %% Añadiendo espacio en blanco arriba
+        space1[" "]
+        space1 --> A
+        
+        %% Nodo principal
         A[📁 betawave]
+        
+        style space1 fill:none,stroke:none
         A -->|"Controlador principal"| B[⚙️ app.py]
         A -->|"Base de datos"| C[🗄️ DDBB.py]
         
