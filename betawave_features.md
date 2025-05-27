@@ -3,10 +3,10 @@ graph TB
     subgraph "BETAWAVE - Reproductor de Música Web"
         direction TB
         
-        U[fa:fa-users Usuarios]
-        M[fa:fa-music Música]
-        C[fa:fa-cog Configuración]
-        A[fa:fa-shield-alt Admin]
+        U[👤 Usuarios]
+        M[🎵 Música]
+        C[⚙️ Configuración]
+        A[🔒 Admin]
         
         U --> U1[Registro]
         U --> U2[Login]
