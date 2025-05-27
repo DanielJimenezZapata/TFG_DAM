@@ -1,82 +1,75 @@
-# 🎵 TFG_DAM
+# Betawave Music Player
 
-> Aplicación Flask que como objetivo es el de añadir tus canciones y reproducirlas, siendo un creador de "playlists".  
+## Requisitos Previos
+- Python 3.13
+- pip (gestión de paquetes)
 
----
+## Instalación
 
-## Autenticación
+1. Clonar el repositorio:
+```powershell
+git clone https://github.com/DanielJimenezZapata/TFG_DAM.git
+cd betawave
+```
 
-### Inicio de sesión
-- 👤 Usuario  
-- 🔑 Contraseña
 
-### Registro
-- 👤 Usuario  
-- 📧 Correo electrónico *(opcional)*  
-- 🔑 Contraseña
+2. Instalar dependencias:
+```powershell
+pip install -r requirements.txt
+```
 
----
+## Ejecutar la Aplicación
 
-## Inicio
+1. Activar el entorno virtual (si no está activado):
+```powershell
+.\venv\Scripts\activate
+```
 
-### Funciones principales:
-- ➕ **Añadir canción:**  
-  Ingresa una URL y el nombre que desees (abajo de la página).
+2. Iniciar la aplicación:
+```powershell
+python app.py
+```
 
-- 🔍 **Buscar canción:**  
-  Busca por nombre de la canción desde la barra superior.
+La aplicación estará disponible en `http://localhost:8501`
 
-- ❤️ **Añadir a favoritos:**  
-  Pasa el cursor sobre la canción → haz clic en el icono del corazón.
+## Ejecutar Tests
 
-- 📥 **Descargar canción:**  
-  Pasa el cursor sobre la canción → haz clic en el **segundo icono**.
+1. Ejecutar todos los tests:
+```powershell
+python -m pytest tests/test_app.py -v
+```
 
-- 🗑️ **Eliminar canción:**  
-  Pasa el cursor sobre la canción → haz clic en el **último icono**.
+2. Ejecutar tests con detalles y prints:
+```powershell
+python -m pytest tests/test_app.py -v -s
+```
 
-- ▶️ **Reproducir canción:**  
-  Haz clic una vez sobre la canción. Tarda unos segundos en empezar.
+3. Ejecutar un test específico:
+```powershell
+python -m pytest tests/test_app.py::test_admin_functions -v
+```
 
-- ⏭️ **Reproducción continua:**  
-  Cuando termina una canción, se reproduce la siguiente. También funciona en la vista de favoritos.
+### Opciones de Tests
+- `-v`: modo con más detalles (verboso)
+- `-s`: muestra prints durante la ejecución 
+- `-k "nombre"`: ejecuta tests que coincidan con el nombre
+- `--pdb`: modo debug si un test falla
+- `-x`: detiene la ejecución en el primer fallo
 
-- 🎚️ **Barra de reproducción:**
-  - Subir / bajar volumen 🔊🔈  
-  - Canción anterior ⏮️ / siguiente ⏭️  
-  - Añadir a favoritos ❤️  
-  - Adelantar o retroceder con la barra verde ⏩
+## Base de Datos
 
----
+La aplicación usa SQLite3 como base de datos. La base de datos se inicializa automáticamente al ejecutar la aplicación por primera vez.
 
-## Perfil de Usuario
+Para reiniciar la base de datos:
+1. Detener la aplicación
+2. Eliminar el archivo `music.db` (Borra TODO lo añadido anteriormente)
+3. Reiniciar la aplicación
 
-📍 Accede pasando el cursor sobre tu nombre de usuario (arriba a la derecha).  
+## Desarrollo
 
-### Puedes modificar:
-- 🧾 Nombre de usuario  
-- 📧 Email  
-- 🔐 Contraseña *(requiere contraseña actual y nueva)*
-
-✅ Recuerda hacer clic en **Guardar Cambios** tras editar tus datos.
-
----
-
-## Cerrar Sesión
-
-📍 También desde el menú del nombre de usuario (arriba a la derecha).
-
----
-
-## Configuración
-
-En desarrollo...
-
----
-
-## 📌 Notas finales
-
-- Proyecto realizado como parte del **TFG** del ciclo **DAM (Desarrollo de Aplicaciones Multiplataforma)**.
-- Si tienes dudas o sugerencias, no dudes en contribuir o abrir un issue.
-
----
+Para el desarrollo, se recomienda:
+1. Activar el entorno virtual
+2. Ejecutar la aplicación:
+```powershell
+python app.py
+```
