@@ -2,12 +2,14 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: betawave
     ports:
       - "8501:8501"
     volumes:
-      - ./data:/app/data
+      - ../data:/app/data
     environment:
       - FLASK_SECRET_KEY=tu_clave_secreta_super_segura
       - DATABASE_PATH=/app/data/music.db

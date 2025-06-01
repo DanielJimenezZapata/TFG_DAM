@@ -657,7 +657,6 @@ document.addEventListener('DOMContentLoaded', function() {
         menu.innerHTML = `
             <div class="format-option" data-format="mp3" role="button" tabindex="0">MP3</div>
             <div class="format-option" data-format="wav" role="button" tabindex="0">WAV</div>
-            <div class="format-option" data-format="ogg" role="button" tabindex="0">OGG</div>
         `;
         
         // Position the menu

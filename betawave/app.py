@@ -17,7 +17,11 @@ data_dir.mkdir(exist_ok=True)
 
 # Database configuration
 app.config['DATABASE'] = os.environ.get('DATABASE_PATH', str(data_dir / 'music.db'))
-app.config['STATIC_FOLDER'] = 'static'
+
+# Static files configuration
+app.static_folder = 'static'
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable cache for development
+app.config['STATIC_FOLDER'] = app.static_folder
 
 # Database Functions
 def init_db():
@@ -859,4 +863,6 @@ def delete_account():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True, host="0.0.0.0", port=8501)
+    # Configuración para producción
+    app.config['SERVER_NAME'] = None
+    app.run(debug=False, host="0.0.0.0", port=8501, threaded=True)
