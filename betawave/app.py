@@ -6,15 +6,26 @@ import yt_dlp
 import tempfile
 import os
 import traceback
+from pathlib import Path
 
 app = Flask(__name__)
-app.secret_key = 'tu_clave_secreta_super_segura'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'tu_clave_secreta_super_segura')
+
+# Ensure data directory exists
+data_dir = Path('data')
+data_dir.mkdir(exist_ok=True)
+
+# Database configuration
+app.config['DATABASE'] = os.environ.get('DATABASE_PATH', str(data_dir / 'music.db'))
 app.config['STATIC_FOLDER'] = 'static'
 
 # Database Functions
 def init_db():
-    db_path = app.config.get('DATABASE', 'music.db')
+    db_path = app.config['DATABASE']
     print(f"\n[init_db] Initializing database at: {db_path}")
+    
+    # Ensure parent directory exists
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     
     conn = sqlite3.connect(db_path)
     c = conn.cursor()

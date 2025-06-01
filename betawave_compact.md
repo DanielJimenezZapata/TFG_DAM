@@ -11,7 +11,7 @@ graph TD
         
         subgraph Música[🎵 Música]
             direction TB
-            M1[YouTube]
+            M1[YouTube]S
             M2[Reproducir]
             M3[Favoritos]
             M4[Buscar]
